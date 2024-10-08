@@ -2,8 +2,8 @@
 #include <vector>
 #include <cmath>
 #include <cstdlib>
-#include "monte_carlo.hpp"
 #include "metropolis.hpp"
+#include "monte_carlo.hpp"
 #include "utils.hpp"
 #include "distributions.hpp"
 #include "progress_bar.hpp"  // Include the custom ProgressBar
