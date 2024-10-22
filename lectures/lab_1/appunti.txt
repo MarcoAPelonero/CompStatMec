@@ -1,0 +1,29 @@
+C++ utilizza il paradigma a ogetti, come python, ma piu a basso livello. 
+In C uno ha cicli condizioni e funzioni, in un paradigma a ogetti si introducono 3 cose: 
+
+Incapsulamento: Separare l'implementazione dall'interfaccia (come una funzione, l'intrefaccia sono gli argomenti della funzione)
+Per esempio se scrivo un codice nbody posso usarlo per e particelle ma pure per i pianeti quindi, posso scrivere qualcosa di piu generico 
+e usarlo in ambienti diversi. I metodi e gli attributi, qui saranno privati o publici
+Qui, i metodi, sono le "braccia" degli ogetti. Sono i modi con cui gli ogetti interagiscono con se stessi (con i propri dati) e con gli altri ogetti.
+
+Polimorfismo: Esempio, data una funzione, io voglio che una stessa funzione/metodo, agisca su cose diverse, in modo diverso (operator overloading)
+Tra l'altro tramite i puntatori, questo processo si puo rendere estremamente efficiente il processo di moltiplicazioni tra ogetti diversi come
+scalari, vettori, matrici, tensori, ecc...
+
+Ereditarietà: Questo è un aspetto assolutamente cruciale della programmazione a ogetti, se voglio riutilizzare degli attributi, posso creare una nuova classe,
+che eredita dalla precedente, imparando quello che la classe precedente sa e utilizzarlo per fare qualcosa di nuovo. 
+
+Partendo da C, C++ e una sua evoluzione che incorpora il paradigma object oriented, ma è piu di alto livello rispetto a C.
+Anche qui, si dichiarano le variabili, per allocare lo spazio, si dice che vanno istanziate. 
+Ma mentre in C l'ogetto piu complesso che posso generare e lo Struct, in C++, le "struct" diventano le classi, che hanno metodi, Ereditarietà ecc...
+
+La struct non e una classe però, non ha degli attributi, ne delle cose publiche e private.
+
+Lasciando stare il python, quando prendo l'out di una funzione, il punto e se riprendo una copia, o se ho passato un indirizzo e ho modificato diretto in memoria
+I metodi di una classe ricevono sempre in modo implicito *this, che è l'indirizzo dell'ogetto stesso. 
+
+Anche quando uso l'Ereditarietà, se un attributo fa parte del private, la nuova classe che eredita non lo puo usare. 
+
+Oltre a private e public, ci sono anche gli attributi "PROTECTED", che sono simili a quelli private, ma con delle piccole modifiche. La modifica sta 
+nell'ereditarietà, cioe il fatto che quei metodi e attributi, non possono essere usati da una classe che eredita la madre, i metodi protected, al contrario,
+possono essere uilizzati. 

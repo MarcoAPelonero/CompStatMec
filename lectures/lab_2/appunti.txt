@@ -1,0 +1,2 @@
+Gli operatori possono operare su cose diverse (il polimorfismo)
+using si usa in vari contesti (alias, tipo using double::number_type), oppure, posso usarlo se una classe ha 2 metodi con lo stesso nome. 

@@ -12,8 +12,8 @@
 int main() {
     // Monte Carlo and Metropolis settings
     int dimensions = 2;  // 2D problem (x, y)
-    int N_steps = 1000;  // Total steps
-    int M_steps = 100;  // Start calculating acceptance rate after M steps
+    int N_steps = 10000;  // Total steps
+    int M_steps = 10;  // Start calculating acceptance rate after M steps
     double initial_delta = 0.1;  // Initial guess for delta
     double k = 1.1;  // Factor for adjusting delta
 
@@ -25,8 +25,8 @@ int main() {
 
     // Step 1: Evaluate a good delta for Metropolis using utils function
     std::cout << "Evaluating optimal delta for Metropolis..." << std::endl;
-    double optimal_delta = adjustDelta(nile_distribution, start, N_steps, M_steps, initial_delta, k);
-
+    //double optimal_delta = adjustDelta(nile_distribution, start, N_steps, M_steps, initial_delta, k);
+    double optimal_delta = 10;
     // Step 2: Initialize Monte Carlo and Metropolis integrators
     MonteCarlo mc(dimensions);
     Metropolis metropolis(optimal_delta, dimensions);

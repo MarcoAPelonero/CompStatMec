@@ -25,4 +25,3 @@ public:
 };
 
 #endif // PROGRESS_BAR_HPP
-
