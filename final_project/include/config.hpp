@@ -4,4 +4,4 @@
 #define N1 3 
 using ntype = double; 
 
-#endif CONFIG_HPP
+#endif 
