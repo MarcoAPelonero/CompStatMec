@@ -1,6 +1,8 @@
 // test.cpp
 #include <iostream>
-#include "tensors.hpp"
+#include "Scalar.hpp"
+#include "Vector.hpp"
+#include "Matrix.hpp"
 
 int main() {
     // Testing Scalar class
@@ -35,7 +37,7 @@ int main() {
 
     Scalar s3(2.0);
     Vector v5 = v1;
-    v5 = v5 * s3;
+    // v5 = v5 * s3;
     v5.show("v5 = v1 * s3");
 
     double dot_product = v1 * v2;
@@ -49,13 +51,13 @@ int main() {
 
     v1 -= v2;
     v1.show("v1 after v1 -= v2");
-
+    /*
     v1 *= s3;
     v1.show("v1 after v1 *= s3");
 
     v1 /= s3;
     v1.show("v1 after v1 /= s3");
-
+    */
     // Testing modulus
     double modulus_v1 = v1.modulus();
     std::cout << "Modulus of v1: " << modulus_v1 << std::endl;

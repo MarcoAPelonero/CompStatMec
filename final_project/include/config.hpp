@@ -3,6 +3,6 @@
 
 #define N1 3
 #define N2 3
-using ntype = float; 
+using ntype = double; 
 
 #endif 
