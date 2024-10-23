@@ -29,6 +29,6 @@ int main() {
     std::cout << "C " << nsC::a << std::endl;
     //std::cout << "Cnew " << a << std::endl;
     return 0;
-
+    // La cosa molto figa di namespace, è che non posso usare solo gli standard type, ma anche i tipi custom delle mie classi
     genvec<double> vec;
 }
