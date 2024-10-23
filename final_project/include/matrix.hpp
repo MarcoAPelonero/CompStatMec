@@ -25,6 +25,7 @@ class Matrix {
         Matrix& operator=(const Matrix& M2);
         Matrix operator+(const Matrix& M2);
         Matrix operator-(const Matrix& M2);
+        Matrix operator*(const Matrix& M2);
         ntype& operator()(int i, int j);
 }; 
 

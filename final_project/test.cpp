@@ -74,6 +74,60 @@ int main() {
 
     are_equal = (v1 == v2);
     std::cout << "v1 == v2: " << are_equal << std::endl;
+    
+    // Default constructor
+    Matrix mat1;
+    mat1.show("mat1 (default constructor)");
+
+    // Constructor with initializer list for diagonal
+    Matrix mat2({1, 2, 3});
+    mat2.show("mat2 (diagonal initializer)");
+
+    // Constructor with rows and columns (multiplication of values)
+    Matrix mat3({1, 2, 3}, {4, 5, 6});
+    mat3.show("mat3 (rows and columns initializer)");
+
+    // Set specific values
+    mat1.set(0, 0, 5.0);
+    mat1.set(1, 1, 10.0);
+    std::cout << "Value at (0,0): " << mat1.get(0, 0) << std::endl;
+    mat1.show("mat1 after using set");
+
+    Matrix mat4({
+    {4, 2, 0},
+    {2, 4, 2},
+    });
+    mat4.show("mat4 before diagonalization");
+
+    int swaps;
+    Matrix diag_mat = mat4.diagonalize(swaps);
+    diag_mat.show("mat4 after diagonalization");
+    std::cout << "Number of swaps: " << swaps << std::endl;
+
+    double det = mat4.determinant();
+    std::cout << "Determinant of mat4: " << det << std::endl;
+
+    // Assignment operator
+    Matrix mat5;
+    mat5 = mat4;
+    mat5.show("mat5 (assigned from mat4)");
+
+    // Addition operator
+    Matrix mat6 = mat4 + mat5;
+    mat6.show("mat6 (mat4 + mat5)");
+
+    // Subtraction operator
+    Matrix mat7 = mat4 - mat5;
+    mat7.show("mat7 (mat4 - mat5)");
+
+    // Multiplication operator (when you implement it)
+    Matrix mat8 = mat4 * mat5;
+    mat8.show("mat8 (mat4 * mat5)");
+
+    // Operator() to access elements
+    mat4(0, 0) = 100;
+    std::cout << "Value at (0, 0) after using operator(): " << mat4(0, 0) << std::endl;
+    mat4.show("mat4 after using operator()");
 
     return 0;
 }
