@@ -50,6 +50,43 @@ double Vector::modulus() {
     return (*this) * (*this);
 }
 
+Vector Vector::rint() {
+    Vector v2;
+    for (int i = 0; i < N1; ++i)
+        v2(i) = ::rint(this->v[i]);
+}
+
+Vector Vector::random(ntype L) {
+    std::random_device rd; 
+    std::mt19937 eng(rd()); 
+
+    std::uniform_real_distribution<double> distr(0.0, L);
+    
+    Vector v1;
+    for (int i = 0; i < N1; i++) 
+        v1(i) = distr(eng);
+    return v1;
+}
+
+Vector Vector::random_orient() {
+    std::random_device rd; 
+    std::mt19937 eng(rd()); 
+
+    std::uniform_real_distribution<double> distr(-1.0, 1.0);
+    double a = 1, b = 1;
+
+    while (a*a+b*b >= 1) {
+        a = distr(eng);
+        b = distr(eng);
+    }
+    
+    double s = a*a+b*b;
+    double x = 2 * a * sqrt(1 - s);
+    double y = 2 * b * sqrt(1 - s);
+    double z = 1 - 2 * s;
+    return Vector{x,y,z};
+}
+
 Vector& Vector::operator=(const Vector& v2) {
     for (int i = 0; i < N1; ++i) {
         v[i] = v2.v[i];
@@ -73,13 +110,19 @@ Vector Vector::operator-(const Vector& v2) {
     return v3;
 }
 
-/*
+
 Vector& Vector::operator*(const Scalar& x) {
     for (int i = 0; i < N1; ++i) {
         v[i] *= x.get();
     }
     return *this;
-} */
+}
+
+Vector operator*(const Scalar& x, const Vector& v1) {
+    Vector v2;
+    for (int i = 0; i<N1; i++)
+        v2.v[i] = v1.v[i] * x.get();
+} 
 
 double Vector::operator*(const Vector& v2) {
     double prod = 0;
@@ -111,7 +154,7 @@ Vector& Vector::operator-=(const Vector& v2) {
     }
     return *this;
 }
-/*
+
 Vector& Vector::operator*=(const Scalar& x) {
     for (int i = 0; i < N1; ++i) {
         v[i] *= x.get();
@@ -124,7 +167,7 @@ Vector& Vector::operator/=(const Scalar& x) {
         v[i] /= x.get();
     }
     return *this;
-}*/
+} 
 
 ntype& Vector::operator()(int index) {
     return v[index];
@@ -154,4 +197,28 @@ std::ostream& operator<<(std::ostream& os, const Vector& vec) {
     }
     os << "]";
     return os;
+}
+
+Vector& Vector::mulcw(const Vector& v2) {
+    for (int i = 0; i < N1; ++i) 
+        this->v[i] = this->v[i] * v2.v[i];
+    return *this;
+}
+
+Vector& Vector::divcw(const Vector& v2) {
+    for (int i = 0; i < N1; ++i) 
+        this->v[i] = this->v[i] / v2.v[i];
+    return *this;
+}
+
+Vector mulcw(const Vector& v1, const Vector& v2) {
+    Vector v3;
+    for (int i = 0; i < N1; ++i)
+        v3.v[i] = v1.v[i] * v2.v[i];
+}
+
+Vector divcw(const Vector& v1, const Vector& v2) {
+    Vector v3;
+    for (int i = 0; i < N1; ++i)
+        v3.v[i] = v1.v[i] / v2.v[i];
 }
