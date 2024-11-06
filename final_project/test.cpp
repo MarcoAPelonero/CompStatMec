@@ -129,5 +129,13 @@ int main() {
     std::cout << "Value at (0, 0) after using operator(): " << mat4(0, 0) << std::endl;
     mat4.show("mat4 after using operator()");
 
+    std::cout << "New Vector class tests: " << mat4(0, 0) << std::endl;
+
+    Vector vt = random_orient();
+    vt.show("Random orient:");
+
+    vt = random(10.0);
+
+
     return 0;
 }
