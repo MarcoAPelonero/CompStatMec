@@ -1,0 +1,2 @@
+Fai un metodo che prende i parametri da un file li legge e li butta nel programma invece del config hpp che e un po una ciofeca
+

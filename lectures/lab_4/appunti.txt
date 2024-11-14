@@ -1,0 +1,3 @@
+I metodi friend NON ricevono *this come aergomento implicito e possono attingere a elementi privati della classe. 
+In pratica il punto è che NON è un metodo della classe, è praticamente una funzione a se stante, sono funzioni che accedono ai metodi 
+e agli attributi privati della classe ma non è un vero metodo
