@@ -1,4 +1,4 @@
-#include "vector.hpp"
+#include "vec.hpp"
 
 Vector::Vector() {
     for (int i = 0; i < N1; ++i) {
@@ -48,13 +48,6 @@ ntype Vector::set(int i, ntype val) {
 
 double Vector::modulus() {
     return (*this) * (*this);
-}
-
-Vector Vector::vretint() {
-    Vector v2;
-    for (int i = 0; i < N1; ++i)
-        v2(i) = retint(this->v[i]);
-    return v2;
 }
 
 Vector random(ntype L) {
@@ -112,33 +105,10 @@ Vector Vector::operator-(const Vector& v2) {
     return v3;
 }
 
-
-Vector& Vector::operator*(const Scalar& x) {
-    for (int i = 0; i < N1; ++i) {
-        v[i] *= x.get();
-    }
-    return *this;
-}
-
-Vector operator*(const Scalar& x, const Vector& v1) {
-    Vector v2;
-    for (int i = 0; i<N1; i++)
-        v2.v[i] = v1.v[i] * x.get();
-    return v2;
-} 
-
 double Vector::operator*(const Vector& v2) {
     double prod = 0;
     for (int i = 0; i < N1; ++i) {
         prod += v[i] * v2.v[i];
-    }
-    return prod;
-}
-
-double Vector::operator/(const Vector& v2) {
-    double prod = 0;
-    for (int i = 0; i < N1; ++i) {
-        prod += v[i] / v2.v[i];
     }
     return prod;
 }
@@ -165,20 +135,6 @@ Vector& Vector::operator-=(const Vector& v2) {
     }
     return *this;
 }
-
-Vector& Vector::operator*=(const Scalar& x) {
-    for (int i = 0; i < N1; ++i) {
-        v[i] *= x.get();
-    }
-    return *this;
-} 
-
-Vector& Vector::operator/=(const Scalar& x) {
-    for (int i = 0; i < N1; ++i) {
-        v[i] /= x.get();
-    }
-    return *this;
-} 
 
 ntype& Vector::operator()(int index) {
     return v[index];
