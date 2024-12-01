@@ -131,7 +131,7 @@ int main() {
 
     std::cout << "New Vector class tests: " << mat4(0, 0) << std::endl;
 
-    random_orient();
+    Vector vt = random_orient();
     vt.show("Random orient:");
 
     vt = random(10.0);
