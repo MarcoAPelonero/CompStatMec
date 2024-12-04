@@ -10,6 +10,7 @@
  */
 #include "./pvector.hpp"
 #include "./params.hpp"
+
 using ntype = double;
 class particle
 {

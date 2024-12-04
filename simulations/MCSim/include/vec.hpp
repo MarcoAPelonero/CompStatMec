@@ -1,7 +1,7 @@
 #ifndef VEC_HPP
 #define VEC_HPP
 
-#include "config.hpp"
+#include "configuration.hpp"
 #include "randNumGen.hpp"
 #include <initializer_list>
 #include <string>
@@ -11,7 +11,6 @@
 class Vector {
     private:
         ntype r[dim];
-        rng.seed(42);
     public:
     Vector();
     Vector(ntype val);
@@ -23,7 +22,9 @@ class Vector {
     ntype set(int i, ntype val);
     double modulus();
     Vector vretint();
+    void random();
     Vector& random(ntype L);
+    friend Vector random();
     friend Vector random(ntype L);
     friend Vector random_orient();
 

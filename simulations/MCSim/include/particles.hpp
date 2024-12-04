@@ -2,13 +2,16 @@
 #define PARTICLES_HPP
 
 #include "vec.hpp"
-#include "config.hpp"
-#include <vector>
+#include "configuration.hpp"
+#include "interactionPotentials.hpp"
+
+// Forward declarations to avoid circular dependencies
+class initialConfiguration;
 
 class Particle {
     private:
         Vector r;  // Position vector
-        Vector rold; //Old position
+        Vector rold; // Old position
         Vector v;
         Vector vold;  // Velocity vector
         Vector a;
@@ -22,24 +25,37 @@ class Particle {
 
         void store();
         void restore();
-        void random();
+        void random(ntype L);
+        void setPosition(Vector pos);
+        void setVelocity(Vector vel);
         Vector getPosition();
+        Vector getOldPosition();
+
+        Particle& operator=(Particle p);
 };
 
-
-class particleEnsemble: public Particle {
+class particleEnsemble: public interactionPotential {  // Removed initialConfiguration from inheritance
     private:
         std::vector<Particle> particles;
+        int numParticles;  // Number of particles
+        ntype ensembleEnergy;
+        initialConfiguration* config;  // Member instead of inheritance
     public:
+        particleEnsemble();
         particleEnsemble(int N);
         ~particleEnsemble();
 
         Particle& operator()(int i);
+        int getNumParticles();
 
-        void initialize(ntype L);
         void initializeRandom(ntype L);
+        void initParticle(int i, Vector v);
         void store();
         void restore();
-        void tra_move(Vector delr);
+
+        ntype getEnergy();
+        ntype calculateEnergy();
+        void updateEnergy(ntype newEnergy);
 };
-#endif // PARTICLE_HPP 
+
+#endif // PARTICLE_HPP

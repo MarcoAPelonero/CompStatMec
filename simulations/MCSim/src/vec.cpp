@@ -26,13 +26,13 @@ Vector::Vector(std::initializer_list<ntype> list) {
     }
 }
 
-Vector::~Vector() {} 
+Vector::~Vector() {}
 
 void Vector::show(std::string name) const {
     std::cout << name << "(";
     for (int i = 0; i < dim; ++i) {
         std::cout << r[i];
-        if (i < dim - 1) 
+        if (i < dim - 1)
             std::cout << ",";
     }
     std::cout << ")\n";
@@ -47,52 +47,45 @@ ntype Vector::set(int i, ntype val) {
 }
 
 double Vector::modulus() {
-    return (*this) * (*this);
+    return std::sqrt((*this) * (*this));
+}
+
+void Vector::random() {
+    for (int i = 0; i < dim; i++)
+        r[i] = rng.ranf();
 }
 
 Vector& Vector::random(ntype L) {
-    std::random_device rd; 
-    std::mt19937 eng(rd()); 
-
-    std::uniform_real_distribution<double> distr(0.0, L);
-    
-    Vector v1;
-    for (int i = 0; i < dim; i++) 
-        v1(i) = distr(eng);
-    return v1;
+    for (int i = 0; i < dim; i++)
+        r[i] = rng.ranf() * L;
+    return *this;
 }
 
+// Random vector with components between 0 and L
 Vector random(ntype L) {
-    std::random_device rd; 
-    std::mt19937 eng(rd()); 
-
-    std::uniform_real_distribution<double> distr(0.0, L);
-    
     Vector v1;
-    for (int i = 0; i < dim; i++) 
-        v1(i) = distr(eng);
+    for (int i = 0; i < dim; i++)
+        v1.set(i, rng.ranf() * L);
     return v1;
 }
 
+// Random orientation vector
 Vector random_orient() {
-    std::random_device rd; 
-    std::mt19937 eng(rd()); 
-
-    std::uniform_real_distribution<double> distr(-1.0, 1.0);
     double a = 1, b = 1;
 
-    while (a*a+b*b >= 1) {
-        a = distr(eng);
-        b = distr(eng);
+    while (a * a + b * b >= 1) {
+        a = rng.ranf() * 2 - 1;
+        b = rng.ranf() * 2 - 1;
     }
-    
-    double s = a*a+b*b;
-    double x = 2 * a * sqrt(1 - s);
-    double y = 2 * b * sqrt(1 - s);
+
+    double s = a * a + b * b;
+    double factor = 2 * std::sqrt(1 - s);
+    double x = a * factor;
+    double y = b * factor;
     double z = 1 - 2 * s;
 
-    return Vector {x,y,z};
-} 
+    return Vector{x, y, z};
+}
 
 Vector& Vector::operator=(const Vector& v2) {
     for (int i = 0; i < dim; ++i) {
@@ -126,7 +119,8 @@ double Vector::operator*(const Vector& v2) {
 }
 
 Vector Vector::operator^(const Vector& v2) const {
-    if (dim != 3) throw std::invalid_argument("Cross product is only defined for 3D vectors");
+    if (dim != 3)
+        throw std::invalid_argument("Cross product is only defined for 3D vectors");
     Vector v3;
     v3.r[0] = r[1] * v2.r[2] - r[2] * v2.r[1];
     v3.r[1] = r[2] * v2.r[0] - r[0] * v2.r[2];

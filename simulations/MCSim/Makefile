@@ -1,47 +1,47 @@
-# Project directories
+# Directories
 SRC_DIR = src
 INCLUDE_DIR = include
 BUILD_DIR = build
 TEST_DIR = test
 
-# Compiler settings
-CC = g++  # Use g++ for compiling both C++ files and C++ test files
-CXX = g++  # For compiling C++ files
-CFLAGS = -Wall -I$(INCLUDE_DIR)  # -I to include the header directory for C++ files
-LDFLAGS =  # Any necessary linker flags can be added here
+# Compiler and flags
+CC = g++
+CXX = g++
+CFLAGS = -g -Wall -I$(INCLUDE_DIR) -fsanitize=address  # Added address sanitizer for better debugging
+LDFLAGS =
 
-# Find all source files in the src directory (only .cpp files)
+# Source files and object files
 SRCS = $(wildcard $(SRC_DIR)/*.cpp)
-OBJS = $(SRCS:$(SRC_DIR)/%.cpp=$(BUILD_DIR)/%.o)  # Object files should be created from .cpp files
-EXEC = $(BUILD_DIR)/program
+OBJS = $(SRCS:$(SRC_DIR)/%.cpp=$(BUILD_DIR)/%.o)
+EXEC = $(BUILD_DIR)/main  # The target executable (change if needed)
 
-# Find all test files in the test directory (only .cpp files)
+# Test files
 TESTS = $(wildcard $(TEST_DIR)/*.cpp)
 
 # Default target
 all: $(EXEC)
 
-# Create the build directory if it doesn't exist
+# Create build directory if it doesn't exist
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
-# Rule to build the program
+# Compile the program
 $(EXEC): $(OBJS)
 	$(CC) $(OBJS) -o $(EXEC) $(LDFLAGS)
 
-# Rule to compile each source file
+# Compile individual object files
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Clean build files
+# Clean up build directory
 clean:
 	rm -rf $(BUILD_DIR)
 
-# Run the compiled program
+# Run the simulation
 run: $(EXEC)
 	$(EXEC)
 
-# Test a specific test file (using TEST variable passed to make)
+# Run a specific test
 .PHONY: test
 test:
 	@if [ -z "$(TEST)" ]; then \
@@ -49,15 +49,14 @@ test:
 		exit 1; \
 	fi
 	@echo "Running test: $(TEST)"
-	# Ensure the object files are up-to-date
-	$(MAKE) $(BUILD_DIR)/particles.o
-	$(MAKE) $(BUILD_DIR)/vec.o
-	$(CXX) $(CFLAGS) $(TEST_DIR)/$(TEST).cpp -o $(BUILD_DIR)/$(TEST) $(BUILD_DIR)/particles.o $(BUILD_DIR)/vec.o && ./$(BUILD_DIR)/$(TEST)
+	# Ensure all object files are up-to-date
+	$(MAKE) $(OBJS)
+	$(CXX) $(CFLAGS) $(TEST_DIR)/$(TEST).cpp -o $(BUILD_DIR)/$(TEST) $(OBJS) && ./$(BUILD_DIR)/$(TEST)
 
-# Run all tests (non-interactive)
+# Run all tests
 .PHONY: test_all
 test_all:
 	@for test in $(basename $(notdir $(TESTS))); do \
 		echo "Running test: $$test"; \
-		$(CXX) $(CFLAGS) $(TEST_DIR)/$$test.cpp -o $(BUILD_DIR)/$$test $(BUILD_DIR)/particles.o $(BUILD_DIR)/vec.o && ./$(BUILD_DIR)/$$test; \
+		$(CXX) $(CFLAGS) $(TEST_DIR)/$$test.cpp -o $(BUILD_DIR)/$$test $(OBJS) && ./$(BUILD_DIR)/$$test; \
 	done

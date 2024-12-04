@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include "particles.hpp"
+#include "config.hpp"
 #include "vec.hpp"
 
 void testParticle() {
@@ -28,7 +29,6 @@ void testParticle() {
 
     // Test store and restore
     p3.store();
-    p3.random();
     std::cout << "Particle p3 after random:" << std::endl;
     p3.getPosition().show("Position");
     p3.restore();
@@ -50,7 +50,7 @@ void testParticleEnsemble() {
     std::cout << "particleEnsemble after initializeRandom:" << std::endl;
     for (int i = 0; i < N; ++i) {
         std::cout << "Particle " << i + 1 << " position: ";
-        ensemble.particles[i].getPosition().show();
+        ensemble(i).getPosition().show();
     }
 
     // Test store and restore
@@ -59,13 +59,13 @@ void testParticleEnsemble() {
     std::cout << "particleEnsemble after another initializeRandom:" << std::endl;
     for (int i = 0; i < N; ++i) {
         std::cout << "Particle " << i + 1 << " position: ";
-        ensemble.particles(i).getPosition().show();
+        ensemble(i).getPosition().show();
     }
     ensemble.restore();
     std::cout << "particleEnsemble after restore:" << std::endl;
     for (int i = 0; i < N; ++i) {
         std::cout << "Particle " << i + 1 << " position: ";
-        ensemble.particles(i).getPosition().show();
+        ensemble(i).getPosition().show();
     }
 }
 
