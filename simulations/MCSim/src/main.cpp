@@ -2,10 +2,10 @@
 #include <iostream>
 
 int main(int argc, char* argv[]) {
-    int N = 100;           // Number of particles
+    int N = 2000;           // Number of particles
     double T = 1.0;        // Temperature
-    double L = 10.0;       // Lattice size
-    int steps = 100;     // Number of Monte Carlo steps
+    double L = 10;       // Lattice size
+    int steps = 1000;       // Number of Monte Carlo steps
 
     std::cout << "Welcome to the Monte Carlo simulation!" << std::endl;
 

@@ -5,33 +5,38 @@
 #include "configuration.hpp"
 #include "randNumGen.hpp"
 #include "interactionPotentials.hpp"
+#include "initialConfiguration.hpp"
 #include "vec.hpp"
 
 class MonteCarloMove: public interactionPotential {
     private:
-        particleEnsemble ensemble;
+        particleEnsemble& ensemble; 
         ntype T;
         ntype v;
         ntype a;
 
-        Particle p;
+        ntype L;
         ntype deltaE;
+
         int numParticles;
         int particleIndex;
+
+        int acceptedMoves;
+        int rejectedMoves;
+
     public:
-        MonteCarloMove();
-        MonteCarloMove(particleEnsemble ensemble, ntype T);
-        MonteCarloMove(particleEnsemble ensemble, ntype T, ntype v, ntype a);
+        MonteCarloMove(particleEnsemble& ensemble, ntype T, ntype L);
+        MonteCarloMove(particleEnsemble& ensemble, ntype T, ntype v, ntype a);
         ~MonteCarloMove();
 
         void MetropolisStep();
 
         void chooseParticle();
         void moveParticle();
-        void savePosition();
-        void computeEnergy();
         void computeEnergyDifference();
         void acceptMove();
+
+        void printAcceptanceRatio();
 };
 
 #endif // MONTECARLOMOVE_HPP

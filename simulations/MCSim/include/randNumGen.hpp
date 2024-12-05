@@ -51,4 +51,7 @@ public:
     ntype ranf() { return unidst(rng); }
 };
 
+extern randNumGen<> rng;
+extern randNumGen<int> particleExtractor;
+
 #endif // RANDNUMGEN_HPP

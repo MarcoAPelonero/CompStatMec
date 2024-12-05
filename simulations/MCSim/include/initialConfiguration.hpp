@@ -11,7 +11,7 @@ class initialConfiguration {
         particleEnsemble ensemble;
     public:
         initialConfiguration();
-        initialConfiguration(int N);
+        initialConfiguration(int N, ntype L);
         ~initialConfiguration();
 
         void initializeSquareLattice(ntype L);

@@ -10,6 +10,7 @@ def compile_simulation():
     if result.returncode != 0:
         print("Compilation failed:")
         print(result.stderr)
+        subprocess.run(['make', 'clean'], capture_output=True, text=True)
         sys.exit(1)
     print("Compilation successful.")
 
@@ -71,7 +72,7 @@ def find_stabilization_point(energies, window=100, threshold=1e-5):
 def main():
     compile_simulation()
 
-    # run_simulation(['200', '2.0', '15.0', '50000'])
+    run_simulation(['200', '1.0', '6.0', '100']) # 200 particles, 2.0 temperature, 15.0 L, 50000 steps
     run_simulation()
 
     steps, energies = read_energies('energies.dat')

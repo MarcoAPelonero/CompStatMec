@@ -7,12 +7,14 @@ TEST_DIR = test
 # Compiler and flags
 CC = g++
 CXX = g++
-CFLAGS = -g -Wall -I$(INCLUDE_DIR) -fsanitize=address  # Added address sanitizer for better debugging
+CFLAGS = -g -Wall -I$(INCLUDE_DIR) 
 LDFLAGS =
 
 # Source files and object files
-SRCS = $(wildcard $(SRC_DIR)/*.cpp)
+MAIN_SRC = $(SRC_DIR)/main.cpp
+SRCS = $(filter-out $(MAIN_SRC), $(wildcard $(SRC_DIR)/*.cpp))
 OBJS = $(SRCS:$(SRC_DIR)/%.cpp=$(BUILD_DIR)/%.o)
+MAIN_OBJ = $(BUILD_DIR)/main.o
 EXEC = $(BUILD_DIR)/main  # The target executable (change if needed)
 
 # Test files
@@ -26,11 +28,15 @@ $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
 # Compile the program
-$(EXEC): $(OBJS)
-	$(CC) $(OBJS) -o $(EXEC) $(LDFLAGS)
+$(EXEC): $(OBJS) $(MAIN_OBJ)
+	$(CC) $(OBJS) $(MAIN_OBJ) -o $(EXEC) $(LDFLAGS)
 
 # Compile individual object files
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Compile main object file
+$(MAIN_OBJ): $(MAIN_SRC) | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Clean up build directory

@@ -47,7 +47,11 @@ ntype Vector::set(int i, ntype val) {
 }
 
 double Vector::modulus() {
-    return std::sqrt((*this) * (*this));
+    double sum = 0;
+    for (int i = 0; i < dim; ++i) {
+        sum += r[i] * r[i];
+    }
+    return std::sqrt(sum);
 }
 
 void Vector::random() {
@@ -70,7 +74,7 @@ Vector random(ntype L) {
 }
 
 // Random orientation vector
-Vector random_orient() {
+Vector Vector::randomVector() {
     double a = 1, b = 1;
 
     while (a * a + b * b >= 1) {
@@ -116,6 +120,14 @@ double Vector::operator*(const Vector& v2) {
         prod += r[i] * v2.r[i];
     }
     return prod;
+}
+
+Vector Vector::operator*(ntype scalar) {
+    Vector v3;
+    for (int i = 0; i < dim; ++i) {
+        v3.r[i] = r[i] * scalar;
+    }
+    return v3;
 }
 
 Vector Vector::operator^(const Vector& v2) const {

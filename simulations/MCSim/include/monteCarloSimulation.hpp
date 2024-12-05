@@ -5,6 +5,9 @@
 #include "monteCarloMove.hpp"
 #include "interactionPotentials.hpp"
 #include <fstream>
+#include "monteCarloSimulation.hpp"
+#include "progressBar.hpp"
+#include <iostream>
 
 class MonteCarloSimulation: public interactionPotential {
 private:
@@ -17,7 +20,8 @@ private:
     ntype Energy;
 
     std::ofstream energyFile;
-
+    std::ofstream positionFile;
+    std::ofstream velocityFile;
 public:
     MonteCarloSimulation(int N, ntype T, ntype L, int steps);
     ~MonteCarloSimulation();
@@ -25,6 +29,5 @@ public:
     void initRNG();
     void run();
 };
-
 
 #endif // MONTECARLOSIMULATION_HPP

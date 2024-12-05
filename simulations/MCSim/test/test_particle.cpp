@@ -2,7 +2,7 @@
 
 #include <iostream>
 #include "particles.hpp"
-#include "config.hpp"
+#include "configuration.hpp"
 #include "vec.hpp"
 
 void testParticle() {
@@ -41,7 +41,7 @@ void testParticleEnsemble() {
 
     // Test constructor with number of particles
     int N = 5;
-    particleEnsemble ensemble(N);
+    particleEnsemble ensemble(N, 10.0);
     std::cout << "particleEnsemble with " << N << " particles created." << std::endl;
 
     // Test initializeRandom

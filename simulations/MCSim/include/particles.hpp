@@ -4,6 +4,9 @@
 #include "vec.hpp"
 #include "configuration.hpp"
 #include "interactionPotentials.hpp"
+#include <vector>
+#include <fstream>
+#include <iostream>
 
 // Forward declarations to avoid circular dependencies
 class initialConfiguration;
@@ -28,8 +31,11 @@ class Particle {
         void random(ntype L);
         void setPosition(Vector pos);
         void setVelocity(Vector vel);
+        void setOldPosition(Vector oldPos);
         Vector getPosition();
         Vector getOldPosition();
+        Vector getVelocity();
+        Vector getOldVelocity();
 
         Particle& operator=(Particle p);
 };
@@ -40,9 +46,10 @@ class particleEnsemble: public interactionPotential {  // Removed initialConfigu
         int numParticles;  // Number of particles
         ntype ensembleEnergy;
         initialConfiguration* config;  // Member instead of inheritance
+        ntype boxLength;
     public:
         particleEnsemble();
-        particleEnsemble(int N);
+        particleEnsemble(int N,ntype L);
         ~particleEnsemble();
 
         Particle& operator()(int i);
@@ -55,7 +62,13 @@ class particleEnsemble: public interactionPotential {  // Removed initialConfigu
 
         ntype getEnergy();
         ntype calculateEnergy();
-        void updateEnergy(ntype newEnergy);
+        void setInitialEnergy();
+        // void particleEnsemble::setEnergy(ntype newEnergy);
+        void updateEnergy(ntype deltaEnergy);
+
+        void saveSnapshotPosition(std::ofstream& file, int step);
+        void saveSnapshotVelocity(std::ofstream& file);
+        void ensembleSnapshot(std::ofstream& file); 
 };
 
 #endif // PARTICLE_HPP

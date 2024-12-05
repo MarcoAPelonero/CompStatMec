@@ -2,17 +2,16 @@
 #define INTERACTIONPOTENTIALS_HPP
 
 #include "vec.hpp"
-#include "configuration.hpp"
 
 class interactionPotential {
-    private:
+    protected:
         ntype epsilon;
         ntype sigma;
-        ntype rcut;
+
     public:
         interactionPotential();
         interactionPotential(ntype sig);
-        interactionPotential(ntype eps, ntype sig, ntype rc);
+        // interactionPotential(ntype eps, ntype sig, ntype rut);
         ~interactionPotential();
 
         ntype computeDistance(Vector r1, Vector r2);
