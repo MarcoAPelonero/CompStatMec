@@ -2,7 +2,7 @@
 #include <iostream>
 
 int main(int argc, char* argv[]) {
-    int N = 2000;           // Number of particles
+    int N = 500;           // Number of particles
     double T = 1.0;        // Temperature
     double L = 10;       // Lattice size
     int steps = 1000;       // Number of Monte Carlo steps

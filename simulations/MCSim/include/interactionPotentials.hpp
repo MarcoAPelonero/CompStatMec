@@ -7,10 +7,12 @@ class interactionPotential {
     protected:
         ntype epsilon;
         ntype sigma;
+        ntype L;
 
     public:
         interactionPotential();
-        interactionPotential(ntype sig);
+        interactionPotential(ntype boxLenght);
+        interactionPotential(ntype sig, ntype eps, ntype boxLenght);
         // interactionPotential(ntype eps, ntype sig, ntype rut);
         ~interactionPotential();
 

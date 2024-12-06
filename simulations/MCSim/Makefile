@@ -1,4 +1,3 @@
-# Directories
 SRC_DIR = src
 INCLUDE_DIR = include
 BUILD_DIR = build
@@ -7,7 +6,7 @@ TEST_DIR = test
 # Compiler and flags
 CC = g++
 CXX = g++
-CFLAGS = -g -Wall -I$(INCLUDE_DIR) 
+CFLAGS = -g -Wall -I$(INCLUDE_DIR)
 LDFLAGS =
 
 # Source files and object files
@@ -25,7 +24,7 @@ all: $(EXEC)
 
 # Create build directory if it doesn't exist
 $(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
+	@mkdir -p $(BUILD_DIR)
 
 # Compile the program
 $(EXEC): $(OBJS) $(MAIN_OBJ)
@@ -66,3 +65,8 @@ test_all:
 		echo "Running test: $$test"; \
 		$(CXX) $(CFLAGS) $(TEST_DIR)/$$test.cpp -o $(BUILD_DIR)/$$test $(OBJS) && ./$(BUILD_DIR)/$$test; \
 	done
+
+# Custom target to compile with warnings
+.PHONY: make_warning
+make_warning: CFLAGS += -Wall -Wextra
+make_warning: all

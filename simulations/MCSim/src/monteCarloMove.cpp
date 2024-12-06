@@ -1,7 +1,7 @@
 #include "monteCarloMove.hpp"
 
 MonteCarloMove::MonteCarloMove(particleEnsemble& ensemble, ntype T, ntype L)
-    : interactionPotential(), ensemble(ensemble), T(T), L(L), 
+    : interactionPotential(L), ensemble(ensemble), T(T), L(L), 
       acceptedMoves(0), rejectedMoves(0) {
     particleExtractor.setDistribution(0, ensemble.getNumParticles() - 1);
     particleIndex = 0;
