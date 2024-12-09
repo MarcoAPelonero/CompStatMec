@@ -1,5 +1,5 @@
-#ifndef PARTICLES_HPP
-#define PARTICLES_HPP
+#ifndef PARTICLE_HPP
+#define PARTICLE_HPP
 
 #include "vec.hpp"
 #include <vector>

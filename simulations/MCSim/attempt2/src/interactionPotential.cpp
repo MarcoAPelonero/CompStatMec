@@ -67,7 +67,9 @@ ntype interactionPotential::lennardJones(ntype r) {
 
 ntype interactionPotential::cutLennardJones(ntype r) {
     if (r < rcut) {
-        return 4.0 * (std::pow(1.0 / r, 12) - std::pow(1.0 / r, 6));
+        ntype lj = 4.0 * epsilon * (std::pow(sigma / r, 12) - std::pow(sigma / r, 6));
+        ntype lj_rcut = 4.0 * epsilon * (std::pow(sigma / rcut, 12) - std::pow(sigma / rcut, 6));
+        return lj - lj_rcut;
     } else {
         return 0.0;
     }

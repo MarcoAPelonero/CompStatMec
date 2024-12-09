@@ -1,179 +1,233 @@
 #include <iostream>
 #include <cmath>
-#include <vector>
+#include <cassert>
+
+// Include your library headers
 #include "interactionPotential.hpp"
+#include "vec.hpp"
 #include "particle.hpp"
 
-void testDefaultConstructor() {
-    interactionPotential ip;
-    if (ip.getSigma() == 1.0 && ip.getEpsilon() == 1.0 && ip.getL() == 10.0 && ip.getRcut() == 2.5) {
-        std::cout << "Default constructor test passed." << std::endl;
-    } else {
-        std::cerr << "Default constructor test failed." << std::endl;
-    }
+// Define a small tolerance for floating-point comparisons
+const double TOL = 1e-6;
+
+// Helper function for floating-point comparison
+bool almostEqual(double a, double b, double tol = TOL) {
+    return std::abs(a - b) < tol;
 }
 
-void testParameterizedConstructor() {
-    ntype boxLength = 10.0;
-    interactionPotential ip(boxLength);
-    if (ip.getL() == boxLength && ip.getSigma() == 1.0 && ip.getEpsilon() == 1.0 && ip.getRcut() == 2.5) {
-        std::cout << "Parameterized constructor test passed." << std::endl;
-    } else {
-        std::cerr << "Parameterized constructor test failed." << std::endl;
-    }
-}
+// ==================== interactionPotential Class Tests ====================
 
-void testFullConstructor() {
-    ntype sigma = 1.0;
-    ntype epsilon = 1.0;
-    ntype boxLength = 10.0;
-    ntype rcut = 2.5;
-    interactionPotential ip(sigma, epsilon, boxLength, rcut);
-    if (ip.getSigma() == sigma && ip.getEpsilon() == epsilon && ip.getL() == boxLength && ip.getRcut() == rcut) {
-        std::cout << "Full constructor test passed." << std::endl;
-    } else {
-        std::cerr << "Full constructor test failed." << std::endl;
-    }
+void testInteractionPotentialConstructors() {
+    // Default constructor
+    interactionPotential ip1;
+    assert(almostEqual(ip1.getSigma(), 1.0));
+    assert(almostEqual(ip1.getEpsilon(), 1.0));
+    assert(almostEqual(ip1.getL(), 10.0));
+    assert(almostEqual(ip1.getRcut(), 2.5));
+    std::cout << "interactionPotential default constructor test passed.\n";
+
+    // Parameterized constructor (box length)
+    interactionPotential ip2(15.0);
+    assert(almostEqual(ip2.getL(), 15.0));
+    assert(almostEqual(ip2.getSigma(), 1.0));
+    assert(almostEqual(ip2.getEpsilon(), 1.0));
+    assert(almostEqual(ip2.getRcut(), 2.5));
+    std::cout << "interactionPotential parameterized constructor (box length) test passed.\n";
+
+    // Full parameterized constructor
+    interactionPotential ip3(1.5, 0.8, 20.0, 3.0);
+    assert(almostEqual(ip3.getSigma(), 1.5));
+    assert(almostEqual(ip3.getEpsilon(), 0.8));
+    assert(almostEqual(ip3.getL(), 20.0));
+    assert(almostEqual(ip3.getRcut(), 3.0));
+    std::cout << "interactionPotential full parameterized constructor test passed.\n";
 }
 
 void testComputeDistance() {
     interactionPotential ip;
-    Vector r1{1.0, 2.0, 3.0};
+    Vector r1{1.0, 1.0, 1.0};
     Vector r2{4.0, 5.0, 6.0};
-    ntype distance = ip.computeDistance(r1, r2);
-    if (std::abs(distance - std::sqrt(27.0)) < 1e-6) {
-        std::cout << "Compute distance test passed." << std::endl;
-    } else {
-        std::cerr << "Compute distance test failed." << std::endl;
-    }
+    double distance = ip.computeDistance(r1, r2);
+    double expected = std::sqrt( (1.0-4.0)*(1.0-4.0) + 
+                                 (1.0-5.0)*(1.0-5.0) + 
+                                 (1.0-6.0)*(1.0-6.0) );
+    assert(almostEqual(distance, expected));
+    std::cout << "interactionPotential computeDistance test without MIC passed.\n";
+
+    // Test with MIC
+    // Assume box length L=10.0, r1=(1,1,1), r2=(9,9,9)
+    Vector r3{9.0, 9.0, 9.0};
+    double distance_mic = ip.computeDistance(r1, r3);
+    // Minimum image: dr = (1-9) = -8 => since |dr| > L/2=5, dr += L => dr = -8 + 10 = 2
+    // Thus distance = sqrt(3*(2^2)) = sqrt(12) ≈ 3.4641
+    double expected_mic = std::sqrt(12.0);
+    assert(almostEqual(distance_mic, expected_mic));
+    std::cout << "interactionPotential computeDistance test with MIC passed.\n";
 }
 
 void testLennardJones() {
     interactionPotential ip;
-    ntype r = 1.0;
-    ntype lj = ip.lennardJones(r);
-    ntype expectedLJ = 4 * (std::pow(1.0 / r, 12) - std::pow(1.0 / r, 6));
-    if (std::abs(lj - expectedLJ) < 1e-6) {
-        std::cout << "Lennard-Jones potential test passed." << std::endl;
-    } else {
-        std::cerr << "Lennard-Jones potential test failed." << std::endl;
-    }
+    double r = 1.0;
+    double lj = ip.lennardJones(r);
+    double expectedLJ = 4.0 * ip.getEpsilon() * (std::pow(ip.getSigma() / r, 12) - std::pow(ip.getSigma() / r, 6));
+    assert(almostEqual(lj, expectedLJ));
+    std::cout << "interactionPotential Lennard-Jones potential test passed.\n";
+
+    // Test at different distance
+    r = 2.0;
+    lj = ip.lennardJones(r);
+    expectedLJ = 4.0 * ip.getEpsilon() * (std::pow(ip.getSigma() / r, 12) - std::pow(ip.getSigma() / r, 6));
+    assert(almostEqual(lj, expectedLJ));
+    std::cout << "interactionPotential Lennard-Jones potential at r=2.0 test passed.\n";
 }
 
 void testCutLennardJones() {
     interactionPotential ip;
-    ntype r = 1.0;
-    ntype clj = ip.cutLennardJones(r);
-    ntype expectedCLJ = ip.lennardJones(r) - ip.lennardJones(ip.getRcut());
-    if (std::abs(clj - expectedCLJ) < 1e-6) {
-        std::cout << "Cut Lennard-Jones potential test passed." << std::endl;
-    } else {
-        std::cerr << "Cut Lennard-Jones potential test failed." << std::endl;
-    }
+    double r_inside = 2.0;
+    double r_outside = 3.0;
+
+    double clj_inside = ip.cutLennardJones(r_inside);
+    double expected_clj_inside = ip.lennardJones(r_inside) - ip.lennardJones(ip.getRcut());
+    assert(almostEqual(clj_inside, expected_clj_inside));
+    std::cout << "interactionPotential cut Lennard-Jones potential inside cutoff test passed.\n";
+
+    // Exactly at cutoff
+    double clj_cutoff = ip.cutLennardJones(ip.getRcut());
+    // Depending on implementation, at r = rcut, it might be zero or V(rcut) - V(rcut) = 0
+    assert(almostEqual(clj_cutoff, 0.0));
+    std::cout << "interactionPotential cut Lennard-Jones potential at cutoff distance test passed.\n";
+
+    // Outside cutoff
+    double clj_outside = ip.cutLennardJones(r_outside);
+    double expected_clj_outside = 0.0;
+    assert(almostEqual(clj_outside, expected_clj_outside));
+    std::cout << "interactionPotential cut Lennard-Jones potential outside cutoff test passed.\n";
 }
 
-void testInteractionWithParticles() {
-    ntype sigma = 1.0;
-    ntype epsilon = 1.0;
-    ntype boxLength = 10.0;
-    ntype rcut = 2.5;
-    interactionPotential ip(sigma, epsilon, boxLength, rcut);
+void testCutLennardJonesParameters() {
+    // Test with different sigma and epsilon
+    interactionPotential ip(2.0, 0.5, 10.0, 3.0);
+    double r = 2.0;
+    double lj = ip.lennardJones(r);
+    double expectedLJ = 4.0 * ip.getEpsilon() * (std::pow(ip.getSigma() / r, 12) - std::pow(ip.getSigma() / r, 6));
+    assert(almostEqual(lj, expectedLJ));
+    std::cout << "interactionPotential Lennard-Jones potential with custom parameters test passed.\n";
 
-    Particle p1(Vector{1.0, 2.0, 3.0});
-    Particle p2(Vector{4.0, 5.0, 6.0});
-    Particle p3(Vector{7.0, 8.0, 9.0});
-    Particle p4(Vector{10.0, 11.0, 12.0});
+    double clj = ip.cutLennardJones(r);
+    double expected_clj = lj - ip.lennardJones(ip.getRcut());
+    assert(almostEqual(clj, expected_clj));
+    std::cout << "interactionPotential cut Lennard-Jones potential with custom parameters inside cutoff test passed.\n";
+}
 
-    std::vector<Particle> particles = {p1, p2, p3, p4};
-    
-    bool allTestsPassed = true;
+void testComputeDistancePeriodicBoundaries() {
+    interactionPotential ip(1.0, 1.0, 10.0, 2.5); // Using default sigma and epsilon
+    Vector r1{1.0, 1.0, 1.0};
+    Vector r2{9.0, 9.0, 9.0}; // Should use MIC
 
-    for (size_t i = 0; i < particles.size(); ++i) {
-        for (size_t j = i + 1; j < particles.size(); ++j) {
-            ntype distance = ip.computeDistance(particles[i].getPosition(), particles[j].getPosition());
-            
-            // Test for regular Lennard-Jones potential
-            ntype lj = ip.lennardJones(distance);
-            ntype expectedLJ = 4 * (std::pow(sigma / distance, 12) - std::pow(sigma / distance, 6));
+    double distance = ip.computeDistance(r1, r2);
+    double expected_distance = std::sqrt(3 * std::pow(2.0, 2)); // dr = -8 + 10 = 2 for each component
+    expected_distance = std::sqrt(12.0); // ≈ 3.4641
+    assert(almostEqual(distance, expected_distance));
+    std::cout << "interactionPotential computeDistance with periodic boundaries (MIC) test passed.\n";
+}
 
-            if (std::abs(lj - expectedLJ) >= 1e-6) {
-                allTestsPassed = false;
-                std::cerr << "Lennard-Jones potential test failed between particle " 
-                          << i << " and particle " << j << std::endl;
-            }
+void testMultipleInteractions() {
+    interactionPotential ip;
+    // Define multiple particle positions
+    std::vector<Vector> positions = {
+        Vector{1.0, 1.0, 1.0},
+        Vector{2.0, 2.0, 2.0},
+        Vector{3.0, 3.0, 3.0},
+        Vector{8.0, 8.0, 8.0} // Should interact with particle 0 via MIC
+    };
 
-            ntype clj = ip.cutLennardJones(distance);
+    // Expected distances
+    std::vector<std::vector<double>> expected_distances = {
+        {0.0, std::sqrt(3.0), std::sqrt(12.0), std::sqrt(12.0)}, // Particle 0
+        {std::sqrt(3.0), 0.0, std::sqrt(3.0), std::sqrt(12.0)},   // Particle 1
+        {std::sqrt(12.0), std::sqrt(3.0), 0.0, std::sqrt(27.0)}, // Particle 2
+        {std::sqrt(12.0), std::sqrt(12.0), std::sqrt(27.0), 0.0} // Particle 3
+    };
 
-            if (distance >= rcut) {
-                if (std::abs(clj) > 1e-6) {
-                    allTestsPassed = false;
-                    std::cerr << "Cut Lennard-Jones potential test failed between particle " 
-                              << i << " and particle " << j << " (distance: " << distance << ")" << std::endl;
-                }
+    // Compute and verify distances
+    for(std::vector<Vector>::size_type i = 0; i < positions.size(); ++i) {
+        for(std::vector<Vector>::size_type j = 0; j < positions.size(); ++j) {
+            double computed_distance = ip.computeDistance(positions[i], positions[j]);
+            if(i == j) {
+                assert(almostEqual(computed_distance, 0.0));
             } else {
-                ntype expectedCLJ = 4 * (std::pow(1.0 / distance, 12) - std::pow(1.0 / distance, 6));
-                if (std::abs(clj - expectedCLJ) >= 1e-6) {
-                    allTestsPassed = false;
-                    std::cerr << "Cut Lennard-Jones potential test failed between particle " 
-                              << i << " and particle " << j << std::endl;
+                // Apply MIC manually
+                Vector dr = positions[i] - positions[j];
+                for(int d = 0; d < dim; ++d) {
+                    if(dr.get(d) > ip.getL() / 2.0) {
+                        dr.set(d, dr.get(d) - ip.getL());
+                    }
+                    else if(dr.get(d) < -ip.getL() / 2.0) {
+                        dr.set(d, dr.get(d) + ip.getL());
+                    }
                 }
+                double expected_distance_mic = dr.modulus();
+                assert(almostEqual(computed_distance, expected_distance_mic));
             }
         }
     }
-
-    if (allTestsPassed) {
-        std::cout << "Multiple particles interaction test passed." << std::endl;
-    } else {
-        std::cerr << "Multiple particles interaction test failed." << std::endl;
-    }
+    std::cout << "interactionPotential multiple interactions distance computations test passed.\n";
 }
 
+void testEnergyCalculationConsistency() {
+    // Create two particles and verify energy calculations
+    interactionPotential ip;
+    Vector r1{1.0, 1.0, 1.0};
+    Vector r2{2.0, 2.0, 2.0};
 
-void testMultipleParticles() {
-    ntype sigma = 1.0;
-    ntype epsilon = 1.0;
-    ntype boxLength = 10.0;
-    ntype rcut = 2.5;
-    interactionPotential ip(sigma, epsilon, boxLength, rcut);
+    double distance = ip.computeDistance(r1, r2);
+    double lj = ip.lennardJones(distance);
+    double clj = ip.cutLennardJones(distance);
 
-    std::vector<Particle> particles;
-    particles.emplace_back(Vector{1.0, 2.0, 3.0});
-    particles.emplace_back(Vector{4.0, 5.0, 6.0});
-    particles.emplace_back(Vector{7.0, 8.0, 9.0});
-    particles.emplace_back(Vector{10.0, 11.0, 12.0});
+    // Manual calculation
+    double expected_lj = 4.0 * ip.getEpsilon() * (std::pow(ip.getSigma() / distance, 12) - std::pow(ip.getSigma() / distance, 6));
+    double expected_clj = (distance < ip.getRcut()) ? (expected_lj - 4.0 * ip.getEpsilon() * (std::pow(ip.getSigma() / ip.getRcut(), 12) - std::pow(ip.getSigma() / ip.getRcut(), 6))) : 0.0;
 
-    bool allTestsPassed = true;
-    for (size_t i = 0; i < particles.size(); ++i) {
-        for (size_t j = i + 1; j < particles.size(); ++j) {
-            ntype distance = ip.computeDistance(particles[i].getPosition(), particles[j].getPosition());
-            ntype lj = ip.lennardJones(distance);
-            ntype clj = ip.cutLennardJones(distance);
+    assert(almostEqual(lj, expected_lj));
+    assert(almostEqual(clj, expected_clj));
 
-            ntype expectedLJ = 4 * (std::pow(1.0 / distance, 12) - std::pow(1.0 / distance, 6));
-            ntype expectedCLJ = ip.lennardJones(distance) - ip.lennardJones(ip.getRcut());
-
-            if (std::abs(lj - expectedLJ) >= 1e-6 || std::abs(clj - expectedCLJ) >= 1e-6) {
-                allTestsPassed = false;
-                std::cerr << "Test failed between particle " << i << " and particle " << j << std::endl;
-            }
-        }
-    }
-
-    if (allTestsPassed) {
-        std::cout << "Multiple particles interaction test passed." << std::endl;
-    } else {
-        std::cerr << "Multiple particles interaction test failed." << std::endl;
-    }
+    std::cout << "interactionPotential energy calculation consistency test passed.\n";
 }
+
+void testEdgeCases() {
+    interactionPotential ip;
+    // Zero distance (should handle gracefully, possibly by returning a very large potential)
+    Vector r1{1.0, 1.0, 1.000000000000001};
+    Vector r2{1.0, 1.0, 1.0};
+    double distance = ip.computeDistance(r1, r2);
+    assert(almostEqual(distance, 0.0));
+    double lj = ip.lennardJones(distance);
+    // Depending on implementation, this might result in infinity or a very large number
+    // Here, we check if it's greater than a threshold
+    assert(lj > 1e6);
+    std::cout << "interactionPotential zero distance edge case test passed.\n";
+
+    double clj = ip.cutLennardJones(ip.getRcut());
+    assert(almostEqual(clj, 0.0));
+    std::cout << "interactionPotential distance exactly at cutoff test passed.\n";
+}
+
+// ==================== Main Test Runner ====================
 
 int main() {
-    testDefaultConstructor();
-    testParameterizedConstructor();
-    testFullConstructor();
+    std::cout << "Starting interactionPotential class tests...\n\n";
+
+    testInteractionPotentialConstructors();
     testComputeDistance();
+    testComputeDistancePeriodicBoundaries();
     testLennardJones();
     testCutLennardJones();
-    testInteractionWithParticles();
-    testMultipleParticles();
+    testCutLennardJonesParameters();
+    testMultipleInteractions();
+    testEnergyCalculationConsistency();
+    testEdgeCases();
+
+    std::cout << "\nAll interactionPotential tests passed successfully!\n";
     return 0;
 }
+

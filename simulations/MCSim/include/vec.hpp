@@ -2,13 +2,11 @@
 #define VEC_HPP
 
 #include "randNumGen.hpp"
+#include "configuration.hpp"
 #include <initializer_list>
 #include <string>
 #include <iostream>
 #include <random>
-
-#define dim 3
-#define ntype double
 
 class Vector {
     private:
