@@ -63,7 +63,12 @@ test:
 test_all:
 	@for test in $(basename $(notdir $(TESTS))); do \
 		echo "Running test: $$test"; \
-		$(CXX) $(CFLAGS) $(TEST_DIR)/$$test.cpp -o $(BUILD_DIR)/$$test $(OBJS) && ./$(BUILD_DIR)/$$test; \
+		$(CXX) $(CFLAGS) $(TEST_DIR)/$$test.cpp -o $(BUILD_DIR)/$$test $(OBJS); \
+		if [ $$? -eq 0 ]; then \
+			./$(BUILD_DIR)/$$test; \
+		else \
+			echo "Test $$test failed to compile."; \
+		fi; \
 	done
 
 # Custom target to compile with warnings
