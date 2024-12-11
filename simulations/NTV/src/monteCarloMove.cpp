@@ -25,10 +25,8 @@ MonteCarloMove& MonteCarloMove::operator=(const MonteCarloMove& other) {
 void MonteCarloMove::MetropolisStep() {
     selectParticle();
     Vector dr = calculateDisplacement();
-    ntype oldEnergy = ensemble.getEnergy();
     moveParticle(dr);
-    ntype newEnergy = ensemble.calculateEnergy();
-    deltaE = newEnergy - oldEnergy;
+    deltaE = ensemble.calculateEnergyDifference(particleIndex);
 
     // std::cout << "Delta E: " << deltaE << std::endl;
     // std::cout << "New Enegy: " << newEnergy << std::endl;
@@ -63,8 +61,10 @@ void MonteCarloMove::checkAcceptance() {
     ntype boltzmann = std::exp(-deltaE / T);
     if (r < boltzmann) {
         acceptedMoves++;
+        ensemble.updateEnsemble(particleIndex, deltaE);
     } else {
-        ensemble.restore();
+        ensemble.restoreEnergy();
+        ensemble.restoreParticle(particleIndex);
         rejectedMoves++;
     }
 }

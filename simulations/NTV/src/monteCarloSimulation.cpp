@@ -5,9 +5,9 @@
 #include <iomanip>
 #include <sstream> // For stringstream
 
-MonteCarloSimulation::MonteCarloSimulation(int numParticles, double boxLength, double T, double delta, int numSteps)
+MonteCarloSimulation::MonteCarloSimulation(int numParticles, double boxLength, double T, double delta, int numSteps, ntype dens)
     : ensemble(numParticles, boxLength), mcMove(ensemble, T, delta),
-      temperature(T), displacement(delta), steps(numSteps) {
+      temperature(T), displacement(delta), steps(numSteps), density(dens) {
     ensemble.initializeEnsemble();
     rng.rseed();
     particleExtractor.setDistribution(0, numParticles - 1);
@@ -20,11 +20,11 @@ void MonteCarloSimulation::runSimulation(int snapshotInterval, int runId) {
 
     // Generate unique filenames using runId
     std::stringstream ss_energy;
-    ss_energy << "data/energy_" << runId << ".txt";
+    ss_energy << "data/energy_" << runId << "_" << temperature << "_" << density << ".txt";
     std::ofstream energyFile(ss_energy.str());
 
     std::stringstream ss_positions;
-    ss_positions << "data/positions_" << runId << ".txt";
+    ss_positions << "data/positions_" << runId << "_" << temperature << "_" << density << ".txt";
     std::ofstream snapshotFile(ss_positions.str());
 
     // Check if files are successfully opened

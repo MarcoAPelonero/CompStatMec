@@ -13,6 +13,9 @@
 class particleEnsemble {
 private:
     std::vector<Particle> particles;
+    std::vector<ntype> radialDistFuncHisto;
+
+    int numBins;
     int numParticles;  
     ntype ensembleEnergy;
     ntype pastEnergy;
@@ -24,6 +27,8 @@ public:
     // Constructors
     particleEnsemble();
     particleEnsemble(int N, ntype L, double sigma =1.0, double epsilon =1.0);
+    particleEnsemble(int numBins, int N, ntype L, double sigma =1.0, double epsilon =1.0);
+
     ~particleEnsemble();
 
     void initializeEnsemble();
@@ -40,6 +45,9 @@ public:
     void setEnergy(ntype newEnergy);
     void setOldEnergy(ntype oldEnergy);
     void restoreEnergy();
+    void restoreParticle(int i);
+    void updateOldParticle(int i);
+    void updateEnsemble(int i, ntype deltaE);
     
     ntype calculateEnergy();
     ntype calculateEnergyDifference(int particleIndex);  
