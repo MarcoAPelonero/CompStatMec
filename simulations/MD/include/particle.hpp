@@ -14,9 +14,10 @@ class Particle {
         Vector vold;  // Velocity vector
         Vector a;
         Vector aold; // Acceleration vector
-        ntype m;  // Mass
+        ntype m;  
 
-        ntype energy; // Mass
+        ntype energy; 
+
     public:
         Particle();
         Particle(Vector r);
@@ -28,10 +29,10 @@ class Particle {
         void restore();
         void random(ntype L);
         void show();
+
         void setPosition(Vector pos);
         void setVelocity(Vector vel);
         void setOldPosition(Vector oldPos);\
-
         Vector getPosition();
         Vector getOldPosition();
         Vector getVelocity();
@@ -39,8 +40,11 @@ class Particle {
         Vector getAcceleration();
         Vector getOldAcceleration();
         ntype getMass();
+        ntype getEnergy();
         
         Particle& operator=(Particle p);
+
+        void updateEnergy(ntype pe);
 };
 
 #endif // PARTICLES_HPP

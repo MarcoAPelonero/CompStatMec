@@ -2,21 +2,21 @@
 
 
 Particle::Particle() {
-    r = Vector();
-    v = Vector();
-    a = Vector();
-    m = 1.0;
+    this->r = Vector();
+    this->v = Vector();
+    this->a = Vector();
+    this->m = 1.0;
 
-    energy = 0;
+    this->energy = 0;
 }
 
 Particle::Particle(Vector r) {
     this->r = r;
-    v = Vector();
-    a = Vector();
-    m = 1.0;
+    this->v = Vector();
+    this->a = Vector();
+    this->m = 1.0;
 
-    energy = 0;
+    this->energy = 0;
 }
 
 Particle::Particle(Vector r, Vector v, Vector a, ntype m) {
@@ -24,6 +24,8 @@ Particle::Particle(Vector r, Vector v, Vector a, ntype m) {
     this->v = v;
     this->a = a;
     this->m = m;
+
+    this->energy = 0;
 }
 
 Particle::Particle(const Particle& other) { // Copy constructor
@@ -34,6 +36,7 @@ Particle::Particle(const Particle& other) { // Copy constructor
     this->a = other.a;
     this->aold = other.aold;
     this->m = other.m;
+    this->energy = other.energy;
 }
 
 Particle::~Particle() {}
@@ -66,12 +69,20 @@ ntype Particle::getMass() {
     return m;
 }
 
+ntype Particle::getEnergy() {
+    return energy;
+}
+
 void Particle::store() {
     rold = r;
+    vold = v;
+    aold = a;   
 }
 
 void Particle::restore() {
     r = rold;
+    v = vold; 
+    a = aold;
 }
 
 void Particle::random(ntype L) {
@@ -98,6 +109,9 @@ void Particle::show() {
     std::cout << "Acceleration: ";
     a.show();
     std::cout << "Mass: " << m << std::endl;
+
+    std::cout << "Energy: " << energy << std::endl;
+    std::cout << std::endl;
 }
 
 Particle& Particle::operator=(Particle p) {
@@ -113,4 +127,9 @@ Particle& Particle::operator=(Particle p) {
     this->m = p.m;
 
     return *this;
+}
+
+void Particle::updateEnergy(ntype pe) {
+    ntype kineticEnergy = 0.5 * m * v.modulus() * v.modulus();
+    energy = kineticEnergy + pe;
 }

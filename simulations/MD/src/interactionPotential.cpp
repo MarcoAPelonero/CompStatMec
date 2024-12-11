@@ -1,5 +1,7 @@
 #include "interactionPotential.hpp"
+#include <cmath>
 
+// Constructors remain the same
 
 interactionPotential::interactionPotential() {
     sigma = 1.0;
@@ -10,10 +12,10 @@ interactionPotential::interactionPotential() {
 
 interactionPotential::interactionPotential(ntype boxLength)
     : L(boxLength) {
-        sigma = 1.0;
-        epsilon = 1.0;
-        rcut = 2.5;
-    }
+    sigma = 1.0;
+    epsilon = 1.0;
+    rcut = 2.5;
+}
 
 interactionPotential::interactionPotential(ntype sig, ntype eps, ntype boxLength) {
     sigma = sig;
@@ -31,46 +33,65 @@ interactionPotential::interactionPotential(ntype sig, ntype eps, ntype boxLength
 
 interactionPotential::~interactionPotential() {}
 
-ntype interactionPotential::getEpsilon() {
-    return epsilon;
-}
+ntype interactionPotential::getEpsilon() { return epsilon; }
+ntype interactionPotential::getSigma() { return sigma; }
+ntype interactionPotential::getL() { return L; }
+ntype interactionPotential::getRcut() { return rcut; }
 
-ntype interactionPotential::getSigma() {
-    return sigma;
-}
-
-ntype interactionPotential::getL() {
-    return L;
-}
-
-ntype interactionPotential::getRcut() {
-    return rcut;
-}
-
-ntype interactionPotential::computeDistance(Vector r1, Vector r2) {
+// Minimal image displacement using L/2.0
+Vector interactionPotential::minimalImageDisplacement(Vector &r1, const Vector &r2) {
     Vector dr = r1 - r2;
     for (int i = 0; i < dim; ++i) {
-        if (dr(i) > L / 2.0) {
+        if (dr(i) > L/2) {
             dr(i) -= L;
-        } else if (dr(i) < -L / 2.0) {
+        } else if (dr(i) < -L/2) {
             dr(i) += L;
         }
-    }  
-    double r = dr.modulus();
-    return r;
+    }
+    return dr;
 }
 
-ntype interactionPotential::lennardJones(ntype r) {  
-    ntype V = 4.0 * epsilon * (std::pow(sigma / r, 12) - std::pow(sigma / r, 6));
-    return V;
+ntype interactionPotential::minimalImageDistance(Vector &r1, const Vector &r2) {
+    Vector dr = minimalImageDisplacement(r1, r2);
+    return dr.modulus();
+}
+
+ntype interactionPotential::lennardJones(ntype r) {
+    if (r <= 0) return 0.0;
+    ntype sr6 = std::pow(sigma / r, 6);
+    ntype sr12 = sr6 * sr6;
+    return 4.0 * epsilon * (sr12 - sr6);
 }
 
 ntype interactionPotential::cutLennardJones(ntype r) {
     if (r < rcut) {
-        ntype lj = 4.0 * epsilon * (std::pow(sigma / r, 12) - std::pow(sigma / r, 6));
-        ntype lj_rcut = 4.0 * epsilon * (std::pow(sigma / rcut, 12) - std::pow(sigma / rcut, 6));
-        return lj - lj_rcut;
+        ntype sr6 = std::pow(sigma / r, 6);
+        ntype sr12 = sr6 * sr6;
+        ntype lj = 4.0 * epsilon * (sr12 - sr6);
+        ntype sr6c = std::pow(sigma / rcut, 6);
+        ntype sr12c = sr6c * sr6c;
+        ntype lj_c = 4.0 * epsilon * (sr12c - sr6c);
+        return lj - lj_c;
     } else {
         return 0.0;
     }
 }
+
+// Compute only the magnitude of the force, given r
+ntype interactionPotential::computeForceMagnitude(ntype r) {
+    if (r <= 0) return 0.0;
+    ntype sr = sigma / r;
+    ntype sr6 = std::pow(sr, 6);
+    ntype sr12 = sr6 * sr6;
+    // f(r) = 24ε (2sr^12 - sr^6)/r
+    ntype f = 24.0 * epsilon * (2.0 * sr12 - sr6) / r;
+    return f;
+}
+
+// Deprecated: If needed, ensure this also uses minimal image properly.
+ntype interactionPotential::computeForce(Vector r1, Vector r2) {
+    Vector dr = minimalImageDisplacement(r1, r2);
+    ntype r = dr.modulus();
+    return computeForceMagnitude(r);
+}
+

@@ -24,9 +24,15 @@ class interactionPotential {
         ntype getL();
         ntype getRcut();
 
-        ntype computeDistance(Vector r1, Vector r2);
+        Vector minimalImageDisplacement(Vector &r1, const Vector &r2);
+        ntype minimalImageDistance(Vector &r1, const Vector &r2);
+
         ntype lennardJones(ntype r);
         ntype cutLennardJones(ntype r);
+
+        ntype computeForceMagnitude(ntype r);
+        ntype computeForce(Vector r1, Vector r2);
+        ntype computeForceMagnittude(ntype r);  
 };
 
 #endif // INTERACTIONPOTENTIALS_HPP

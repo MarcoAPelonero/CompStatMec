@@ -24,6 +24,7 @@ public:
     ntype get(int i) const;
     ntype set(int i, ntype val);
     double modulus();
+    Vector norm();  
     void random();
     Vector& random(ntype L);
     friend Vector random(ntype L);
@@ -32,9 +33,10 @@ public:
     Vector& operator=(const Vector& v2);
     Vector operator+(const Vector& v2);
     Vector operator-(const Vector& v2);
-
     double operator*(const Vector& v2);
     Vector operator*(ntype scalar);
+    Vector operator/(ntype scalar);
+
     Vector operator^(const Vector& v2) const;
     Vector& operator+=(const Vector& v2);
     Vector& operator-=(const Vector& v2);

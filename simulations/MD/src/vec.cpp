@@ -60,6 +60,15 @@ double Vector::modulus() {
     return std::sqrt(sum);
 }
 
+Vector Vector::norm() {
+    double mod = modulus();
+    Vector v;
+    for (int i = 0; i < dim; ++i) {
+        v.r[i] = r[i] / mod;
+    }
+    return v;
+}
+
 void Vector::random() {
     for (int i = 0; i < dim; i++)
         r[i] = rng.ranf();
@@ -132,6 +141,14 @@ Vector Vector::operator*(ntype scalar) {
     Vector v3;
     for (int i = 0; i < dim; ++i) {
         v3.r[i] = r[i] * scalar;
+    }
+    return v3;
+}
+
+Vector Vector::operator/(ntype scalar) {
+    Vector v3;
+    for (int i = 0; i < dim; ++i) {
+        v3.r[i] = r[i] / scalar;
     }
     return v3;
 }
