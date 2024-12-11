@@ -10,49 +10,40 @@ def read_ensemble_data(filename):
     The file contains multiple snapshots separated by blank lines.
     The first line is a header: x y z vx vy vz energy
     """
-    with open(filename, 'r') as f:
-        lines = f.read().strip('\n').split('\n')
+    print(f"Opening file: {filename}")
+    try:
+        with open(filename, 'r') as f:
+            lines = f.read().strip().split('\n\n')  # Split by blank lines
 
-    header = lines[0].split()
-    data_lines = [line for line in lines[1:] if line.strip() != ""]
+        print("File read successfully.")
+        header = lines[0].strip().split()  # First line is the header
+        print(f"Header: {header}")
 
-    # Use tqdm to show progress
-    raw_data = []
-    with tqdm(total=len(data_lines), desc="Reading data") as pbar:
-        for line in data_lines:
-            try:
-                raw_data.append(list(map(float, line.split())))
-                pbar.update(1)
-            except ValueError:
-                print(f"Skipping invalid line: {line}")
-                pbar.update(1)
+        data_blocks = [block.strip().split('\n') for block in lines[1:]]
+        print(f"Number of snapshots detected: {len(data_blocks)}")
 
-    raw_data = np.array(raw_data)
+        numParticles = len(data_blocks[0])  # Number of lines in the first snapshot
+        print(f"Number of particles per snapshot: {numParticles}")
 
-    # Deduce number of particles by checking the pattern
-    numParticles = None
-    for i in range(1, raw_data.shape[0]):
-        if np.allclose(raw_data[:i, :], raw_data[i:2 * i, :]):
-            numParticles = i
-            break
+        raw_data = []
+        for block in tqdm(data_blocks, desc="Processing snapshots"):
+            snapshot_data = [list(map(float, line.split())) for line in block]
+            raw_data.append(snapshot_data)
 
-    if numParticles is None:
-        raise ValueError("Could not deduce the number of particles. Check the input file.")
+        data_reshaped = np.array(raw_data)  # Convert to numpy array
+        print(f"Data shape: {data_reshaped.shape}")
+        return header, data_reshaped
 
-    numSnapshots = raw_data.shape[0] // numParticles
-    if numSnapshots * numParticles != raw_data.shape[0]:
-        print("Warning: Incomplete data at the end. Ignoring incomplete snapshot.")
-        raw_data = raw_data[:numSnapshots * numParticles]
-
-    data_reshaped = raw_data.reshape(numSnapshots, numParticles, 7)
-    return header, data_reshaped
+    except Exception as e:
+        print(f"Error reading data: {e}")
+        raise
 
 def animate_particles(data):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-    ax.set_xlim([-10, 10])
-    ax.set_ylim([-10, 10])
-    ax.set_zlim([-10, 10])
+    ax.set_xlim([0, 10])
+    ax.set_ylim([0, 10])
+    ax.set_zlim([0, 10])
 
     particles, = ax.plot([], [], [], 'bo', markersize=2)
 
@@ -65,12 +56,98 @@ def animate_particles(data):
     ani = animation.FuncAnimation(fig, update, frames=data.shape[0], interval=50, blit=True)
     plt.show()
 
+def plot_energies(data):
+    try:
+        energies = data[:, :, 6].mean(axis=1)
+        plt.plot(energies, label="Average Energy")
+        plt.xlabel("Snapshot")
+        plt.ylabel("Energy")
+        plt.title("Energy Evolution")
+        plt.legend()
+        plt.show()
+    except Exception as e:
+        print(f"Error plotting energies: {e}")
+
+def plot_velocities(data):
+    try:
+        velocities = np.linalg.norm(data[:, :, 3:6], axis=2).mean(axis=1)
+        plt.plot(velocities, label="Average Velocity")
+        plt.xlabel("Snapshot")
+        plt.ylabel("Velocity")
+        plt.title("Velocity Evolution")
+        plt.legend()
+        plt.show()
+    except Exception as e:
+        print(f"Error plotting velocities: {e}")
+
+def live_plot(data):
+    try:
+        fig, axes = plt.subplots(4, 4, figsize=(12, 12))
+        fig.suptitle("Simulation Live Metrics")
+
+        ax3d = fig.add_subplot(4, 4, 1, projection='3d')
+        ax3d.set_xlim([0, 10])
+        ax3d.set_ylim([0, 10])
+        ax3d.set_zlim([0, 10])
+
+        particles, = ax3d.plot([], [], [], 'bo', markersize=2)
+        avg_energy_ax = axes[1, 0]
+        avg_vel_ax = axes[2, 0]
+        avg_pos_ax = axes[3, 0]
+
+        avg_energy_data = []
+        avg_velocity_data = []
+        avg_positions_data = []
+
+        def update(frame):
+            positions = data[frame, :, 0:3]
+            particles.set_data(positions[:, 0], positions[:, 1])
+            particles.set_3d_properties(positions[:, 2])
+
+            avg_energy_data.append(data[frame, :, 6].mean())
+            avg_velocity_data.append(np.linalg.norm(data[frame, :, 3:6], axis=1).mean())
+            avg_positions_data.append(np.linalg.norm(positions, axis=1).mean())
+
+            avg_energy_ax.plot(avg_energy_data, color='red')
+            avg_vel_ax.plot(avg_velocity_data, color='blue')
+            avg_pos_ax.plot(avg_positions_data, color='green')
+
+            return particles,
+
+        ani = animation.FuncAnimation(fig, update, frames=data.shape[0], interval=100, blit=False)
+        plt.show()
+    except Exception as e:
+        print(f"Error in live plotting: {e}")
+
 if __name__ == "__main__":
     try:
         header, data = read_ensemble_data("ensemble_data.txt")
         print("Header:", header)
         print("Data shape:", data.shape)
 
-        animate_particles(data)
+        while True:
+            try:
+                print("\nOptions:")
+                print("1. Animate particles")
+                print("2. Plot energy evolution")
+                print("3. Plot velocity evolution")
+                print("4. Live plot with metrics")
+                print("5. Exit")
+
+                choice = input("Enter your choice: ")
+                if choice == "1":
+                    animate_particles(data)
+                elif choice == "2":
+                    plot_energies(data)
+                elif choice == "3":
+                    plot_velocities(data)
+                elif choice == "4":
+                    live_plot(data)
+                elif choice == "5":
+                    break
+                else:
+                    print("Invalid choice. Please try again.")
+            except Exception as e:
+                print(f"Error during choice execution: {e}")
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Fatal error: {e}")

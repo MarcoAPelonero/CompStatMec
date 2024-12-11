@@ -28,7 +28,7 @@ int main(int argc, char* argv[]) {
     }
 
     molecularDynamicsSimulation simulation(numParticles, boxSize, dt, numSteps);
-    simulation.setIntegrationMethod(molecularDynamicsSimulation::EULER);
+    simulation.setIntegrationMethod(molecularDynamicsSimulation::EULER_CROMER);
     simulation.run(outFile);
 
     outFile.close();
