@@ -8,11 +8,12 @@ class MonteCarloSimulation {
 private:
     particleEnsemble ensemble;
     MonteCarloMove mcMove;
-    double temperature;
+    double temperature; 
+    ntype density;
     double displacement;
     int steps;  
 public:
-    MonteCarloSimulation(int numParticles, double boxLength, double T, double delta, int numSteps);
+    MonteCarloSimulation(int numParticles, double boxLength, double T, double delta, int numSteps, ntype dens);
     ~MonteCarloSimulation();
 
     void initRNG();

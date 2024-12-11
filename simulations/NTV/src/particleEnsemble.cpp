@@ -14,11 +14,11 @@ int particleEnsemble::integerCubeRoot(int N) const {
 }
 
 // Default constructor
-particleEnsemble::particleEnsemble() : numParticles(0), ensembleEnergy(0.0), pastEnergy(0.0), boxLength(0.0), potential() {
+particleEnsemble::particleEnsemble() : numBins(0), numParticles(0), ensembleEnergy(0.0), pastEnergy(0.0), boxLength(0.0), potential() {
     particles = std::vector<Particle>();
+    radialDistFuncHisto = std::vector<ntype>();
 }
 
-// Parameterized constructor
 particleEnsemble::particleEnsemble(int N, ntype L, double sigma, double epsilon) 
     : numParticles(N), ensembleEnergy(0.0), pastEnergy(0.0), boxLength(L), potential(sigma, epsilon, L) {
     if (N < 0) {
@@ -28,6 +28,19 @@ particleEnsemble::particleEnsemble(int N, ntype L, double sigma, double epsilon)
         throw std::invalid_argument("Box length must be positive.");
     }
     particles = std::vector<Particle>(N);
+    radialDistFuncHisto = std::vector<ntype>();
+}
+// Parameterized constructor
+particleEnsemble::particleEnsemble(int numBins, int N, ntype L, double sigma, double epsilon) 
+    : numParticles(N), ensembleEnergy(0.0), pastEnergy(0.0), boxLength(L), potential(sigma, epsilon, L) {
+    if (N < 0) {
+        throw std::invalid_argument("Number of particles cannot be negative.");
+    }
+    if (L <= 0.0) {
+        throw std::invalid_argument("Box length must be positive.");
+    }
+    particles = std::vector<Particle>(N);
+    radialDistFuncHisto = std::vector<ntype>(numBins);
 }
 
 // Destructor
@@ -52,6 +65,9 @@ void particleEnsemble::initializeEnsemble() {
                 particleIndex++;
             }
         }
+    }
+    for (int i = 0; i < numBins; i++) {
+        radialDistFuncHisto[i] = 0;
     }
     ensembleEnergy = calculateEnergy();
 }
@@ -124,6 +140,15 @@ void particleEnsemble::restoreEnergy() {
     ensembleEnergy = pastEnergy;
 }   
 
+void particleEnsemble::restoreParticle(int i) {
+    particles[i].restore();
+}
+
+void particleEnsemble::updateEnsemble(int i, ntype deltaE) {
+    ensembleEnergy += deltaE;
+    particles[i].store();
+    pastEnergy = ensembleEnergy;
+}
 // Calculate total energy
 ntype particleEnsemble::calculateEnergy() {
     ntype energy = 0.0;
@@ -145,10 +170,14 @@ ntype particleEnsemble::calculateEnergyDifference(int particleIndex) {
     for (int i = 0; i < numParticles; ++i) {
         if (i == particleIndex) continue;
         Vector r_i = particles[i].getPosition();
+        Vector r_jOld = particles[particleIndex].getOldPosition();
         Vector r_j = particles[particleIndex].getPosition();
         double distance = potential.computeDistance(r_i, r_j);
-        deltaEnergy += potential.lennardJones(distance);
+        double oldDistance = potential.computeDistance(r_i, r_jOld);
+
+        deltaEnergy += potential.lennardJones(distance) - potential.lennardJones(oldDistance);
     }
+    // std::cout << "Delta diff:" << deltaEnergy << std::endl;
     return deltaEnergy;
 }
 
