@@ -70,10 +70,9 @@ void particleEnsemble::computeForceAndEnergyForParticle(int i, Vector &pos, Vect
 // Apply periodic boundary conditions
 inline void particleEnsemble::applyPeriodicBoundary(Vector &pos) {
     for (int d = 0; d < dim; ++d) {
+        pos(d) = fmod(pos(d), boxSize);
         if (pos(d) < 0) {
             pos(d) += boxSize;
-        } else if (pos(d) >= boxSize) {
-            pos(d) -= boxSize;
         }
     }
 }

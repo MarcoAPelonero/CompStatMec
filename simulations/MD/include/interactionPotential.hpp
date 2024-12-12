@@ -24,8 +24,8 @@ class interactionPotential {
         ntype getL();
         ntype getRcut();
 
-        Vector minimalImageDisplacement(Vector &r1, const Vector &r2);
-        ntype minimalImageDistance(Vector &r1, const Vector &r2);
+        Vector minimalImageDisplacement(const Vector &r1, const Vector &r2);
+        ntype minimalImageDistance(const Vector &r1, const Vector &r2);
 
         ntype lennardJones(ntype r);
         ntype cutLennardJones(ntype r);

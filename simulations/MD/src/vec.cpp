@@ -1,4 +1,6 @@
 #include "vec.hpp"
+#include <cmath>
+#include <stdexcept>
 
 Vector::Vector() {
     for (int i = 0; i < dim; ++i) {
@@ -52,7 +54,7 @@ ntype Vector::set(int i, ntype val) {
     return r[i] = val;
 }
 
-double Vector::modulus() {
+double Vector::modulus() const {
     double sum = 0;
     for (int i = 0; i < dim; ++i) {
         sum += r[i] * r[i];
@@ -60,13 +62,13 @@ double Vector::modulus() {
     return std::sqrt(sum);
 }
 
-Vector Vector::norm() {
+Vector Vector::norm() const {
     double mod = modulus();
     Vector v;
     for (int i = 0; i < dim; ++i) {
         v.r[i] = r[i] / mod;
     }
-    return v;
+    return v; // Return by value
 }
 
 void Vector::random() {
@@ -113,7 +115,7 @@ Vector& Vector::operator=(const Vector& v2) {
     return *this;
 }
 
-Vector Vector::operator+(const Vector& v2) {
+Vector Vector::operator+(const Vector& v2) const {
     Vector v3;
     for (int i = 0; i < dim; ++i) {
         v3.r[i] = r[i] + v2.r[i];
@@ -121,7 +123,7 @@ Vector Vector::operator+(const Vector& v2) {
     return v3;
 }
 
-Vector Vector::operator-(const Vector& v2) {
+Vector Vector::operator-(const Vector& v2) const {
     Vector v3;
     for (int i = 0; i < dim; ++i) {
         v3.r[i] = r[i] - v2.r[i];
@@ -129,7 +131,7 @@ Vector Vector::operator-(const Vector& v2) {
     return v3;
 }
 
-double Vector::operator*(const Vector& v2) {
+double Vector::operator*(const Vector& v2) const {
     double prod = 0;
     for (int i = 0; i < dim; ++i) {
         prod += r[i] * v2.r[i];
@@ -137,7 +139,7 @@ double Vector::operator*(const Vector& v2) {
     return prod;
 }
 
-Vector Vector::operator*(ntype scalar) {
+Vector Vector::operator*(ntype scalar) const {
     Vector v3;
     for (int i = 0; i < dim; ++i) {
         v3.r[i] = r[i] * scalar;
@@ -145,7 +147,7 @@ Vector Vector::operator*(ntype scalar) {
     return v3;
 }
 
-Vector Vector::operator/(ntype scalar) {
+Vector Vector::operator/(ntype scalar) const {
     Vector v3;
     for (int i = 0; i < dim; ++i) {
         v3.r[i] = r[i] / scalar;
@@ -181,7 +183,11 @@ ntype& Vector::operator()(int index) {
     return r[index];
 }
 
-bool Vector::operator==(const Vector& v2) {
+const ntype& Vector::operator()(int index) const {
+    return r[index];
+}
+
+bool Vector::operator==(const Vector& v2) const {
     for (int i = 0; i < dim; ++i) {
         if (r[i] != v2.r[i])
             return false;
@@ -189,6 +195,6 @@ bool Vector::operator==(const Vector& v2) {
     return true;
 }
 
-bool Vector::operator!=(const Vector& v2) {
+bool Vector::operator!=(const Vector& v2) const {
     return !(*this == v2);
 }
