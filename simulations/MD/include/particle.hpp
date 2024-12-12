@@ -16,6 +16,7 @@ class Particle {
         Vector aold; // Acceleration vector
         ntype m;  
 
+        ntype kinetic, potential; 
         ntype energy; 
 
     public:
@@ -26,13 +27,17 @@ class Particle {
         ~Particle();
 
         void store();
+        void storePosition();
         void restore();
         void random(ntype L);
         void show();
 
         void setPosition(Vector pos);
         void setVelocity(Vector vel);
-        void setOldPosition(Vector oldPos);\
+        void setOldPosition(Vector oldPos);
+        void setAcceleration(Vector acceleration);
+        void setKinetic(ntype kineticEnergy);
+        void setPotential(ntype potentialEnergy);
         Vector getPosition();
         Vector getOldPosition();
         Vector getVelocity();
@@ -40,11 +45,13 @@ class Particle {
         Vector getAcceleration();
         Vector getOldAcceleration();
         ntype getMass();
+        ntype getKinetic();
         ntype getEnergy();
         
-        Particle& operator=(Particle p);
+        Particle& operator=(Particle& p);
 
-        void updateEnergy(ntype pe);
+        void computeKinetic();
+        void updateEnergy();
 };
 
 #endif // PARTICLES_HPP

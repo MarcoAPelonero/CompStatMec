@@ -51,12 +51,6 @@ void particleEnsemble::show() {
     }
 }
 
-void particleEnsemble::updateEnsemble() {
-    for (int i = 0; i < numParticles; ++i) {
-        particles[i].store();
-    }
-}
-
 // Helper method to compute force and potential energy for a single particle i at a given position
 void particleEnsemble::computeForceAndEnergyForParticle(int i, Vector &pos, Vector &force, ntype &potentialEnergy) {
     force = Vector{0.0, 0.0, 0.0};
@@ -67,7 +61,7 @@ void particleEnsemble::computeForceAndEnergyForParticle(int i, Vector &pos, Vect
         Vector dr = potential.minimalImageDisplacement(pos, particles[j].getOldPosition());
         ntype r = dr.modulus();
         ntype pe = potential.lennardJones(r);
-        ntype f = potential.computeForceMagnitude(r);
+        ntype f = potential.computeForceMagnitudeLennardJones(r);
         potentialEnergy += pe;
         force += (dr / r) * f;
     }
@@ -101,10 +95,11 @@ void particleEnsemble::stepEuler(int i, ntype dt) {
 
     particles[i].setPosition(newPosition);
     particles[i].setVelocity(newVelocity);
-    particles[i].updateEnergy(potentialEnergy);
+    particles[i].setPotential(potentialEnergy);
+    particles[i].computeKinetic();
+    particles[i].updateEnergy();
 }
 
-// Euler-Cromer step for a single particle
 void particleEnsemble::stepEulerCromer(int i, ntype dt) {
     Vector r1 = particles[i].getOldPosition();
     Vector v  = particles[i].getOldVelocity();
@@ -114,6 +109,7 @@ void particleEnsemble::stepEulerCromer(int i, ntype dt) {
     computeForceAndEnergyForParticle(i, r1, fij, potentialEnergy);
 
     Vector a = fij / particles[i].getMass();
+    // a.show("Acceleration: ");
     Vector newVelocity = v + a * dt;
     Vector newPosition = r1 + newVelocity * dt;
 
@@ -121,7 +117,9 @@ void particleEnsemble::stepEulerCromer(int i, ntype dt) {
 
     particles[i].setPosition(newPosition);
     particles[i].setVelocity(newVelocity);
-    particles[i].updateEnergy(potentialEnergy);
+    particles[i].setPotential(potentialEnergy);
+    particles[i].computeKinetic();
+    particles[i].updateEnergy();
 }
 
 //NOT USABLE AT THE MOMENT
@@ -145,11 +143,10 @@ void particleEnsemble::stepLeapFrog(int i, ntype dt) {
 
     particles[i].setPosition(r_new);
     particles[i].setVelocity(v_half_new);
-    particles[i].updateEnergy(potentialEnergy);
+    // particles[i].updateEnergy(potentialEnergy);
 }
 
-// Velocity Verlet step for a single particle
-void particleEnsemble::stepVelocityVerlet(int i, ntype dt) {
+void particleEnsemble::stepVerlet(int i, ntype dt) {
     Vector r1 = particles[i].getOldPosition();
     Vector v  = particles[i].getOldVelocity();
 
@@ -157,23 +154,48 @@ void particleEnsemble::stepVelocityVerlet(int i, ntype dt) {
     ntype potentialEnergy;
     computeForceAndEnergyForParticle(i, r1, fij, potentialEnergy);
     Vector a = fij / particles[i].getMass();
-
-    // Position half-step
+    if (potentialEnergy == 0.0) {
+        std::cerr << "Potential energy is zero. Check for errors.\n";
+    }
+    // a.show("Acceleartion: ");
     Vector newPosition = r1 + (v * dt) + a * (0.5 * dt * dt);
     applyPeriodicBoundary(newPosition);
+    particles[i].setPosition(newPosition);
+    particles[i].setAcceleration(a);
+    particles[i].setPotential(potentialEnergy);
+}
 
-    // Compute force with updated position
+// Velocity Verlet step for a single particle
+void particleEnsemble::stepVelocityVerlet(int i, ntype dt) {
+    Vector newPosition = particles[i].getPosition(); 
+    Vector v = particles[i].getOldVelocity();
     Vector fij_new;
+    Vector a = particles[i].getAcceleration();
     ntype dummyEnergy; // potentialEnergy stored for the initial pos only, or reassign here if desired
     computeForceAndEnergyForParticle(i, newPosition, fij_new, dummyEnergy);
     Vector a_new = fij_new / particles[i].getMass();
-
+    // std::cout << std::endl;
+    // a.show("Old acceleration: ");
+    // a_new.show("New acceleration: ");
     // Velocity full-step
     Vector newVelocity = v + (a + a_new) * (0.5 * dt);
 
-    particles[i].setPosition(newPosition);
     particles[i].setVelocity(newVelocity);
-    particles[i].updateEnergy(potentialEnergy);
+    particles[i].computeKinetic();
+    particles[i].setAcceleration(a_new);
+    particles[i].updateEnergy();
+}
+
+void particleEnsemble::updateEnsemblePositions() {
+    for (int i = 0; i < numParticles; ++i) {
+        particles[i].storePosition();
+    }
+}
+
+void particleEnsemble::updateEnsemble() {
+    for (int i = 0; i < numParticles; ++i) {
+        particles[i].store();
+    }
 }
 
 void particleEnsemble::ensembleSnapshot(std::ofstream &outFile, bool writeHeader) {

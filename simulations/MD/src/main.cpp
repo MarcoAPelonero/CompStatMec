@@ -4,10 +4,11 @@
 #include <cstring>
 
 int main(int argc, char* argv[]) {
-    int numParticles = 300;
-    ntype density = 0.7;
-    ntype dt = 0.01;
-    int numSteps = 1000;
+    int numParticles = 100; //300
+    ntype density = 0.6;
+    ntype dt = 0.005;
+    int numSteps = 10000;
+    ntype temperature = 1.8;
     std::string outFileName = "ensemble_data.txt";
 
     if (argc > 1) {
@@ -27,6 +28,7 @@ int main(int argc, char* argv[]) {
     }
 
     ntype boxSize = std::pow(numParticles / density, 1.0/3.0);
+
     std::cout << "Box size: " << boxSize << std::endl;
     std::cout << "Out: " << outFileName << std::endl;
     std::ofstream outFile(outFileName);
@@ -35,7 +37,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    molecularDynamicsSimulation simulation(numParticles, boxSize, dt, numSteps);
+    molecularDynamicsSimulation simulation(numParticles, boxSize, dt, numSteps, temperature);
     simulation.setIntegrationMethod(molecularDynamicsSimulation::VELOCITY_VERLET);
     simulation.run(outFile);
     simulation.printAverageEnergy();

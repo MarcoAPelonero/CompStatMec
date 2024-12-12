@@ -1,8 +1,11 @@
 import matplotlib.pyplot as plt
-import matplotlib.animation as animation
 import numpy as np
 import subprocess
 import os
+from scipy.optimize import curve_fit
+
+global TIME 
+TIME = 1
 
 def runSimulation(numParticles, density, timeStep, numSteps, filename, simIndex):
     """
@@ -66,60 +69,85 @@ def readEnsembleData(filename):
 
     return header, data_reshaped
 
-def computeOrder(minDelta, maxDelta, numSimulations, numParticles=100, density=0.5, numSteps=1000, skipSnapShots=100):
+def computeOrder(minDelta, maxDelta, numSimulations, numParticles=100, density=0.5, numSteps=1000, skipSnapShots=0):
     deltaTime = np.linspace(minDelta, maxDelta, numSimulations)
     errors = []
-
+    skips = [1000, 100, 10, 10, 10]  # Adjust if needed
     for i, dt in enumerate(deltaTime):
         filename = f"data/ensemble_{i+1}.dat"
-        runSimulation(numParticles, density, dt, numSteps, filename, i+1)
+        steps = int(TIME / dt)
+        print(f"Steps for simulation {i+1}: {steps}")
+        runSimulation(numParticles, density, dt, steps, filename, i+1)
         header, data = readEnsembleData(filename)
 
         # Extract the energy column index from the header
         energy_index = header.index('energy')
 
-        # Always skip the first few snapshots
+        # Ensure enough snapshots to skip the desired number
         if data.shape[0] <= skipSnapShots:
             print("Not enough snapshots to skip the desired number. Consider increasing the number of steps.")
             continue
 
-        polished_data = data[skipSnapShots:]  # Skip the initial snapshots
+        # Use only data after skipSnapShots for analysis
+        polished_data = data[skipSnapShots:]
 
-        # Compute total energy for each snapshot in the polished data
+        # Compute total energy for each snapshot
         total_energies = np.sum(polished_data[:, :, energy_index], axis=1)
 
-        # Compute the drift as the average difference between consecutive snapshots
-        energy_diffs = np.diff(total_energies)
-        average_drift = np.mean(np.abs(energy_diffs))
-        errors.append((dt, average_drift))
-        print(f"Timestep: {dt}, Average Drift: {average_drift}")
+        # Automatically detect stabilization point
+        # Stabilization happens when energy variations settle below a threshold
+        stabilization_index = next(
+            (i for i in range(1, len(total_energies)) 
+             if np.abs(total_energies[i] - total_energies[i-1]) < 10),
+            None
+        )
 
-    # Check if the error scales with dt by fitting a line
+        if stabilization_index is None:
+            print(f"Simulation {i+1}: Unable to detect stabilization point.")
+            continue
+
+        stabilized_energies = total_energies[stabilization_index:]
+        plt.plot(stabilized_energies)
+        plt.show()
+        initial_energy = stabilized_energies[0]
+
+        # Compute energy errors during the stabilized period
+        energy_errors = np.abs(stabilized_energies - initial_energy)
+        average_error = np.mean(energy_errors)
+        errors.append((dt, average_error))
+        print(f"Timestep: {dt}, Average Energy Error (stabilized period): {average_error}")
+
+    # Analyze scaling behavior
     if errors:
         dts, errs = zip(*errors)
-        coeffs = np.polyfit(dts, errs, 1)
-        print(f"Linear fit coefficients: {coeffs}")
 
+        # Fit a quadratic curve
+        def quadratic_fit(dt, C):
+            return C * dt**2
+
+        popt, _ = curve_fit(quadratic_fit, dts, errs)
+
+        # Plot the results
         plt.figure()
-        plt.plot(dts, errs, 'bo', label='Energy drift')
-        plt.plot(dts, np.polyval(coeffs, dts), 'r-', label='Linear fit')
-        plt.xlabel('Timestep')
-        plt.ylabel('Average Drift')
+        plt.plot(dts, errs, 'bo', label='Energy error')
+        plt.plot(dts, quadratic_fit(np.array(dts), *popt), 'r-', label='Quadratic fit')
+        plt.xlabel('Timestep (\u0394t)')
+        plt.ylabel('Average Energy Error')
         plt.legend()
         plt.show()
 
     return errors
 
-if "__main__" == __name__:
+if __name__ == "__main__":
     if not os.path.exists("data"):
         os.system("mkdir data")
 
-    numParticles = 50
+    numParticles = 20
     density = 0.5
-    numSteps = 1000
-    minDelta = 0.001
+    numSteps = 10000
+    minDelta = 0.0001
     maxDelta = 0.01
     numSimulations = 5
-    skipSnapShots = 100
+    skipSnapShots = 0
 
     errors = computeOrder(minDelta, maxDelta, numSimulations, numParticles, density, numSteps, skipSnapShots)

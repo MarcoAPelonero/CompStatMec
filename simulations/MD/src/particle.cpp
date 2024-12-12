@@ -7,6 +7,8 @@ Particle::Particle() {
     this->a = Vector();
     this->m = 1.0;
 
+    this->kinetic = 0;
+    this->potential = 0;
     this->energy = 0;
 }
 
@@ -16,6 +18,8 @@ Particle::Particle(Vector r) {
     this->a = Vector();
     this->m = 1.0;
 
+    this->kinetic = 0;
+    this->potential = 0;
     this->energy = 0;
 }
 
@@ -25,6 +29,8 @@ Particle::Particle(Vector r, Vector v, Vector a, ntype m) {
     this->a = a;
     this->m = m;
 
+    this->kinetic = 0;
+    this->potential = 0;
     this->energy = 0;
 }
 
@@ -36,6 +42,8 @@ Particle::Particle(const Particle& other) { // Copy constructor
     this->a = other.a;
     this->aold = other.aold;
     this->m = other.m;
+    this->kinetic = other.kinetic;
+    this->potential = other.potential;
     this->energy = other.energy;
 }
 
@@ -69,6 +77,10 @@ ntype Particle::getMass() {
     return m;
 }
 
+ntype Particle::getKinetic() {
+    return kinetic;
+}
+
 ntype Particle::getEnergy() {
     return energy;
 }
@@ -77,6 +89,10 @@ void Particle::store() {
     rold = r;
     vold = v;
     aold = a;   
+}
+
+void Particle::storePosition() {
+    rold = r;
 }
 
 void Particle::restore() {
@@ -101,6 +117,18 @@ void Particle::setOldPosition(Vector oldPos) {
     rold = oldPos;
 }
 
+void Particle::setAcceleration(Vector acceleration) {
+    a = acceleration;
+}
+
+void Particle::setKinetic(ntype kineticEnergy) {
+    kinetic = kineticEnergy;
+}
+
+void Particle::setPotential(ntype potentialEnergy) {
+    potential = potentialEnergy;
+}
+
 void Particle::show() {
     std::cout << "Position: ";
     r.show();
@@ -114,9 +142,8 @@ void Particle::show() {
     std::cout << std::endl;
 }
 
-Particle& Particle::operator=(Particle p) {
-    if (this == &p)
-        return *this;
+Particle& Particle::operator=(Particle &p) {
+    if (this == &p) return *this;
 
     this->r = p.r;
     this->rold = p.rold;
@@ -125,11 +152,17 @@ Particle& Particle::operator=(Particle p) {
     this->a = p.a;
     this->aold = p.aold;
     this->m = p.m;
-
+    this->kinetic = p.kinetic;
+    this->potential = p.potential;
+    this->energy = p.energy;
+    
     return *this;
 }
 
-void Particle::updateEnergy(ntype pe) {
-    ntype kineticEnergy = 0.5 * m * v.modulus() * v.modulus();
-    energy = kineticEnergy + pe;
+void Particle::computeKinetic() {
+    kinetic = 0.5 * m * v.modulus() * v.modulus();
+}
+
+void Particle::updateEnergy() {
+    energy = kinetic + potential;
 }

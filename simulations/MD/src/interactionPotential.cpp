@@ -78,7 +78,7 @@ ntype interactionPotential::cutLennardJones(ntype r) {
 }
 
 // Compute only the magnitude of the force, given r
-ntype interactionPotential::computeForceMagnitude(ntype r) {
+ntype interactionPotential::computeForceMagnitudeLennardJones(ntype r) {
     if (r <= 0) return 0.0;
     ntype sr = sigma / r;
     ntype sr6 = std::pow(sr, 6);
@@ -89,9 +89,26 @@ ntype interactionPotential::computeForceMagnitude(ntype r) {
 }
 
 // Deprecated: If needed, ensure this also uses minimal image properly.
-ntype interactionPotential::computeForce(Vector r1, Vector r2) {
+ntype interactionPotential::computeForceLennardJones(Vector r1, Vector r2) {
     Vector dr = minimalImageDisplacement(r1, r2);
     ntype r = dr.modulus();
-    return computeForceMagnitude(r);
+    return computeForceMagnitudeLennardJones(r);
 }
 
+ntype interactionPotential::coulomb(ntype r) {
+    if (r <= 0) return 0.0;
+    return 1.0 / r;
+}
+
+ntype interactionPotential::computeForceMagnitudeCoulomb(ntype r) {
+    if (r <= 0) return 0.0;
+    // f(r) = 1 / r^2
+    return 1.0 / (r * r);
+}
+
+// Deprecated: If needed, ensure this also uses minimal image properly.
+ntype interactionPotential::computeForceCoulomb(Vector r1, Vector r2) {
+    Vector dr = minimalImageDisplacement(r1, r2);
+    ntype r = dr.modulus();
+    return computeForceMagnitudeCoulomb(r);
+}

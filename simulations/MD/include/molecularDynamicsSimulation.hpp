@@ -17,10 +17,11 @@ class molecularDynamicsSimulation {
         particleEnsemble ensemble;
         ntype dt;
         int numSteps;
+        ntype temperature;
         IntegrationMethod method;
 
     public:
-        molecularDynamicsSimulation(int numParticles, ntype boxSize, ntype dt, int numSteps);
+        molecularDynamicsSimulation(int numParticles, ntype boxSize, ntype dt, int numSteps, ntype temperature);
         ~molecularDynamicsSimulation();
 
         ntype computeAverageEnergy();
@@ -28,6 +29,11 @@ class molecularDynamicsSimulation {
 
         void run(std::ofstream &outFile);
         void setIntegrationMethod(IntegrationMethod method);
+
+        void Euler(std::ofstream &outFile);
+        void EulerCromer(std::ofstream &outFile); 
+        void LeapFrog(std::ofstream &outFile);
+        void VelocityVerlet(std::ofstream &outFile);
 };
 
 #endif // MOLECULARDYNAMICSSIMULATION_HPP

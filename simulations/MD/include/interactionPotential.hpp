@@ -29,10 +29,12 @@ class interactionPotential {
 
         ntype lennardJones(ntype r);
         ntype cutLennardJones(ntype r);
+        ntype coulomb(ntype r);
 
-        ntype computeForceMagnitude(ntype r);
-        ntype computeForce(Vector r1, Vector r2);
-        ntype computeForceMagnittude(ntype r);  
+        ntype computeForceMagnitudeLennardJones(ntype r);
+        ntype computeForceLennardJones(Vector r1, Vector r2);
+        ntype computeForceMagnitudeCoulomb(ntype r);
+        ntype computeForceCoulomb(Vector r1, Vector r2);
 };
 
 #endif // INTERACTIONPOTENTIALS_HPP

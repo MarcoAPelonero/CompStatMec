@@ -25,10 +25,13 @@ class particleEnsemble {
         void stepEuler(int i, ntype dt);
         void stepEulerCromer(int i, ntype dt);
         void stepLeapFrog(int i, ntype dt);
+        void stepVerlet(int i, ntype dt);
         void stepVelocityVerlet(int i, ntype dt);
         
         void computeForceAndEnergyForParticle(int i, Vector &pos, Vector &force, ntype &potentialEnergy);
         inline void applyPeriodicBoundary(Vector &pos);
+
+        void updateEnsemblePositions();
         void updateEnsemble();
 
         void ensembleSnapshot(std::ofstream &outFile, bool writeHeader = false);

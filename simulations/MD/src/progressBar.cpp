@@ -42,6 +42,13 @@ void ProgressBar::display() {
     auto now = std::chrono::steady_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - startTime).count();
 
+    int eta = 0;
+    if (currentStep > 0) {
+        eta = static_cast<int>(elapsed * (1.0f - progress) / progress);
+    } else {
+        eta = -1; // Set to -1 or a specific message to indicate ETA is unknown
+    }
+
     std::cout << "\r" << prefixText << " [";
     for (int i = 0; i < barWidth; ++i) {
         if (i < pos) std::cout << "=";
@@ -50,5 +57,8 @@ void ProgressBar::display() {
     }
     std::cout << "] " << std::fixed << std::setprecision(1) << (progress * 100.0) << "% "
               << suffixText << " Elapsed: " << elapsed << "s";
+    if (eta >= 0) {
+        std::cout << " ETA: " << eta << "s";
+    } 
     std::cout.flush();
 }
