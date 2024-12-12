@@ -114,7 +114,7 @@ def live_plot(data):
 
             return particles,
 
-        ani = animation.FuncAnimation(fig, update, frames=data.shape[0], interval=100, blit=False)
+        ani = animation.FuncAnimation(fig, update, frames=data.shape[0], interval=20, blit=False)
         plt.show()
     except Exception as e:
         print(f"Error in live plotting: {e}")

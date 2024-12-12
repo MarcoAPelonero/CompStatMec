@@ -5,6 +5,18 @@ molecularDynamicsSimulation::molecularDynamicsSimulation(int numParticles, ntype
 
 molecularDynamicsSimulation::~molecularDynamicsSimulation() {}
 
+ntype molecularDynamicsSimulation::computeAverageEnergy() {
+    ntype totalEnergy = 0.0;
+    for (int i = 0; i < ensemble.getNumParticles(); ++i) {
+        totalEnergy += ensemble(i).getEnergy();
+    }
+    return totalEnergy / ensemble.getNumParticles();
+}
+
+void molecularDynamicsSimulation::printAverageEnergy() {
+    std::cout << "Average energy: " << computeAverageEnergy() << std::endl;
+}
+
 void molecularDynamicsSimulation::run(std::ofstream &outFile) {
     ensemble.ensembleSnapshot(outFile, true);
 
@@ -18,6 +30,12 @@ void molecularDynamicsSimulation::run(std::ofstream &outFile) {
                     break;
                 case EULER_CROMER:
                     ensemble.stepEulerCromer(j, dt);
+                    break;
+                case LEAP_FROG:
+                    ensemble.stepLeapFrog(j, dt);
+                    break;
+                case VELOCITY_VERLET:
+                    ensemble.stepVelocityVerlet(j, dt);
                     break;
             }
         }

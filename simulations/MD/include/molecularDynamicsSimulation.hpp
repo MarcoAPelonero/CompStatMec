@@ -6,7 +6,12 @@
 
 class molecularDynamicsSimulation {
     public:
-        enum IntegrationMethod { EULER, EULER_CROMER };
+        enum IntegrationMethod { 
+            EULER, 
+            EULER_CROMER,
+            LEAP_FROG,
+            VELOCITY_VERLET 
+            };
 
     private:
         particleEnsemble ensemble;
@@ -17,6 +22,9 @@ class molecularDynamicsSimulation {
     public:
         molecularDynamicsSimulation(int numParticles, ntype boxSize, ntype dt, int numSteps);
         ~molecularDynamicsSimulation();
+
+        ntype computeAverageEnergy();
+        void printAverageEnergy();
 
         void run(std::ofstream &outFile);
         void setIntegrationMethod(IntegrationMethod method);
