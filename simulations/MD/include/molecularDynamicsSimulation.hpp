@@ -10,7 +10,8 @@ class molecularDynamicsSimulation {
             EULER, 
             EULER_CROMER,
             LEAP_FROG,
-            VELOCITY_VERLET 
+            VELOCITY_VERLET,
+            THERMO_VELOCITY_VERLET
             };
 
     private:
@@ -34,6 +35,7 @@ class molecularDynamicsSimulation {
         void EulerCromer(std::ofstream &outFile); 
         void LeapFrog(std::ofstream &outFile);
         void VelocityVerlet(std::ofstream &outFile);
+        void ThermoVelocityVerlet(std::ofstream &outFile);
 };
 
 #endif // MOLECULARDYNAMICSSIMULATION_HPP

@@ -35,6 +35,9 @@ void molecularDynamicsSimulation::run(std::ofstream &outFile) {
         case VELOCITY_VERLET:
             VelocityVerlet(outFile);
             break;
+        case THERMO_VELOCITY_VERLET:    
+            ThermoVelocityVerlet(outFile);
+            break;
     }
 }
 
@@ -83,6 +86,26 @@ void molecularDynamicsSimulation::LeapFrog(std::ofstream &outFile) {
 }
 
 void molecularDynamicsSimulation::VelocityVerlet (std::ofstream &outFile) {
+    std::cout << "Running Velocity Verlet" << std::endl;
+    int thermoSteps = 10;
+    ntype kb = 1.0;
+    ProgressBar bar(numSteps);
+    for (int i = 0; i < numSteps; ++i) {
+        ensemble.updateEnsemble();
+        for (int j = 0; j < ensemble.getNumParticles(); ++j) {
+            ensemble.stepVerlet(j, dt);
+        }
+        ensemble.updateEnsemblePositions();
+        for (int j = 0; j < ensemble.getNumParticles(); ++j) {
+            ensemble.stepVelocityVerlet(j, dt);
+        }
+        bar.update(i);
+        ensemble.ensembleSnapshot(outFile);
+    }
+    bar.finish();
+}
+
+void molecularDynamicsSimulation::ThermoVelocityVerlet (std::ofstream &outFile) {
     std::cout << "Running Velocity Verlet" << std::endl;
     int thermoSteps = 10;
     ntype kb = 1.0;
