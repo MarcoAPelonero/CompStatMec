@@ -30,6 +30,16 @@ particleEnsemble::particleEnsemble(int numParticles, ntype boxSize)
             }
         }
     }
+    for (int i = 0; i < numParticles; ++i) {
+        Vector fij{0.0,0.0,0.0};
+        ntype potentialEnergy = 0.0;
+        Vector r1 = particles[i].getPosition();
+        computeForceAndEnergyForParticle(i, r1, fij, potentialEnergy);
+        particles[i].setPotential(potentialEnergy);
+        particles[i].computeKinetic();
+        particles[i].updateEnergy();
+    }
+    updateEnsembleEnergy();
 }
 
 particleEnsemble::~particleEnsemble() {
@@ -68,11 +78,12 @@ void particleEnsemble::computeForceAndEnergyForParticle(int i, Vector &pos, Vect
 }
 
 // Apply periodic boundary conditions
-inline void particleEnsemble::applyPeriodicBoundary(Vector &pos) {
-    for (int d = 0; d < dim; ++d) {
-        pos(d) = fmod(pos(d), boxSize);
-        if (pos(d) < 0) {
-            pos(d) += boxSize;
+void particleEnsemble::applyPeriodicBoundary(Vector &pos) {
+    for (int i = 0; i < dim; ++i) {
+        if (pos(i) < 0) {
+            pos(i) += boxSize;
+        } else if (pos(i) >= boxSize) {
+            pos(i) -= boxSize;
         }
     }
 }
@@ -103,8 +114,8 @@ void particleEnsemble::stepEulerCromer(int i, ntype dt) {
     Vector r1 = particles[i].getOldPosition();
     Vector v  = particles[i].getOldVelocity();
 
-    Vector fij;
-    ntype potentialEnergy;
+    Vector fij{0.0,0.0,0.0};
+    ntype potentialEnergy = 0;
     computeForceAndEnergyForParticle(i, r1, fij, potentialEnergy);
 
     Vector a = fij / particles[i].getMass();
@@ -149,8 +160,8 @@ void particleEnsemble::stepVerlet(int i, ntype dt) {
     Vector r1 = particles[i].getOldPosition();
     Vector v  = particles[i].getOldVelocity();
 
-    Vector fij;
-    ntype potentialEnergy;
+    Vector fij{0.0,0.0,0.0};
+    ntype potentialEnergy = 0.0;
     computeForceAndEnergyForParticle(i, r1, fij, potentialEnergy);
     Vector a = fij / particles[i].getMass();
     if (potentialEnergy == 0.0) {
@@ -168,9 +179,9 @@ void particleEnsemble::stepVerlet(int i, ntype dt) {
 void particleEnsemble::stepVelocityVerlet(int i, ntype dt) {
     Vector newPosition = particles[i].getPosition(); 
     Vector v = particles[i].getOldVelocity();
-    Vector fij_new;
+    Vector fij_new{0.0,0.0,0.0};
     Vector a = particles[i].getAcceleration();
-    ntype dummyEnergy; // potentialEnergy stored for the initial pos only, or reassign here if desired
+    ntype dummyEnergy = 0.0; // potentialEnergy stored for the initial pos only, or reassign here if desired
     computeForceAndEnergyForParticle(i, newPosition, fij_new, dummyEnergy);
     Vector a_new = fij_new / particles[i].getMass();
     // std::cout << std::endl;
@@ -210,4 +221,15 @@ void particleEnsemble::ensembleSnapshot(std::ofstream &outFile, bool writeHeader
                 << E << "\n";
     }
     outFile << "\n";
+}
+
+void particleEnsemble::updateEnsembleEnergy() {
+    ntype energy = 0;
+    for (int i = 0; i < numParticles; ++i) {
+        energy += particles[i].getEnergy();
+    }
+}
+
+ntype particleEnsemble::getEnsembleEnergy() {
+    return ensembleEnergy;
 }

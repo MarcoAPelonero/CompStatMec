@@ -17,7 +17,6 @@ def read_ensemble_data(filename):
 
         print("File read successfully.")
         header = lines[0].strip().split()  # First line is the header
-        print(f"Header: {header}")
 
         data_blocks = [block.strip().split('\n') for block in lines[1:]]
         print(f"Number of snapshots detected: {len(data_blocks)}")
@@ -41,9 +40,10 @@ def read_ensemble_data(filename):
 def animate_particles(data):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-    ax.set_xlim([0, 10])
-    ax.set_ylim([0, 10])
-    ax.set_zlim([0, 10])
+    boxSize = 6.93361
+    ax.set_xlim([0, boxSize])
+    ax.set_ylim([0, boxSize])
+    ax.set_zlim([0, boxSize])
 
     particles, = ax.plot([], [], [], 'bo', markersize=2)
 
@@ -86,9 +86,9 @@ def live_plot(data):
         fig.suptitle("Simulation Live Metrics")
 
         ax3d = fig.add_subplot(4, 4, 1, projection='3d')
-        ax3d.set_xlim([0, 10])
-        ax3d.set_ylim([0, 10])
-        ax3d.set_zlim([0, 10])
+        ax3d.set_xlim([0, 100])
+        ax3d.set_ylim([0, 100])
+        ax3d.set_zlim([0, 100])
 
         particles, = ax3d.plot([], [], [], 'bo', markersize=2)
         avg_energy_ax = axes[1, 0]

@@ -4,10 +4,10 @@
 #include <cstring>
 
 int main(int argc, char* argv[]) {
-    int numParticles = 100; //300
+    int numParticles = 200; //300
     ntype density = 0.6;
     ntype dt = 0.01;
-    int numSteps = 10000;
+    int numSteps = 1000;
     ntype temperature = 1;
     std::string outFileName = "ensemble_data.txt";
 
@@ -28,7 +28,6 @@ int main(int argc, char* argv[]) {
     }
 
     ntype boxSize = std::pow(numParticles / density, 1.0/3.0);
-
     std::cout << "Box size: " << boxSize << std::endl;
     std::cout << "Out: " << outFileName << std::endl;
     std::ofstream outFile(outFileName);

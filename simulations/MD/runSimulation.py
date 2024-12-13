@@ -69,52 +69,30 @@ def readEnsembleData(filename):
 
     return header, data_reshaped
 
-def computeOrder(minDelta, maxDelta, numSimulations, numParticles=100, density=0.5, numSteps=1000, skipSnapShots=0):
+def computeOrder(minDelta, maxDelta, numSimulations, numParticles=100, density=0.5, numSteps=1000):
     deltaTime = np.linspace(minDelta, maxDelta, numSimulations)
     errors = []
-    skips = [1000, 100, 10, 10, 10]  # Adjust if needed
     for i, dt in enumerate(deltaTime):
         filename = f"data/ensemble_{i+1}.dat"
         steps = int(TIME / dt)
         print(f"Steps for simulation {i+1}: {steps}")
-        runSimulation(numParticles, density, dt, steps, filename, i+1)
+        runSimulation(numParticles, density, dt, 10000, filename, i+1)
         header, data = readEnsembleData(filename)
 
         # Extract the energy column index from the header
         energy_index = header.index('energy')
 
-        # Ensure enough snapshots to skip the desired number
-        if data.shape[0] <= skipSnapShots:
-            print("Not enough snapshots to skip the desired number. Consider increasing the number of steps.")
-            continue
-
-        # Use only data after skipSnapShots for analysis
-        polished_data = data[skipSnapShots:]
+        # Use all data without skipping snapshots
+        polished_data = data
 
         # Compute total energy for each snapshot
         total_energies = np.sum(polished_data[:, :, energy_index], axis=1)
 
-        # Automatically detect stabilization point
-        # Stabilization happens when energy variations settle below a threshold
-        stabilization_index = next(
-            (i for i in range(1, len(total_energies)) 
-             if np.abs(total_energies[i] - total_energies[i-1]) < 10),
-            None
-        )
-
-        if stabilization_index is None:
-            print(f"Simulation {i+1}: Unable to detect stabilization point.")
-            continue
-
-        stabilized_energies = total_energies[stabilization_index:]
-        
-        initial_energy = stabilized_energies[0]
 
         # Compute energy errors during the stabilized period
-        energy_errors = np.abs(stabilized_energies - initial_energy)
-        average_error = np.mean(energy_errors)
-        errors.append((dt, average_error))
-        print(f"Timestep: {dt}, Average Energy Error (stabilized period): {average_error}")
+        energy_errors = np.std(total_energies[0] - total_energies)
+        errors.append((dt, energy_errors))
+        print(f"Timestep: {dt}, Average Energy Error (stabilized period): { energy_errors }")
 
     # Analyze scaling behavior
     if errors:
@@ -137,6 +115,15 @@ def computeOrder(minDelta, maxDelta, numSimulations, numParticles=100, density=0
 
     return errors
 
+def find_stabilization_index(total_energies, window_size=10, std_threshold=1e-3):
+    for i in range(window_size, len(total_energies)):
+        window = total_energies[i-window_size:i]
+        mean = np.mean(window)
+        std = np.std(window)
+        if mean != 0 and (std / mean) < std_threshold:
+            return i - window_size
+    return None
+
 if __name__ == "__main__":
     if not os.path.exists("data"):
         os.system("mkdir data")
@@ -147,6 +134,5 @@ if __name__ == "__main__":
     minDelta = 0.0001
     maxDelta = 0.01
     numSimulations = 5
-    skipSnapShots = 0
 
-    errors = computeOrder(minDelta, maxDelta, numSimulations, numParticles, density, numSteps, skipSnapShots)
+    errors = computeOrder(minDelta, maxDelta, numSimulations, numParticles, density, numSteps)

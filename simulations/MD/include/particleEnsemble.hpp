@@ -11,6 +11,7 @@ class particleEnsemble {
         std::vector<Particle> particles;
         int numParticles;
         ntype boxSize;
+        ntype ensembleEnergy;
         interactionPotential potential;
 
     public:
@@ -29,12 +30,14 @@ class particleEnsemble {
         void stepVelocityVerlet(int i, ntype dt);
         
         void computeForceAndEnergyForParticle(int i, Vector &pos, Vector &force, ntype &potentialEnergy);
-        inline void applyPeriodicBoundary(Vector &pos);
+        void applyPeriodicBoundary(Vector &pos);
 
         void updateEnsemblePositions();
         void updateEnsemble();
 
         void ensembleSnapshot(std::ofstream &outFile, bool writeHeader = false);
+        void updateEnsembleEnergy();
+        ntype getEnsembleEnergy();  
 };
 
 #endif // PARTICLEENSEMBLE_HPP

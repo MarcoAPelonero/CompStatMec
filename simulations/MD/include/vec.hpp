@@ -18,6 +18,7 @@ public:
     Vector(ntype val);
     Vector(std::initializer_list<ntype> list);
     Vector(const Vector& other);
+    Vector(ntype x, ntype y, ntype z);
     ~Vector();
     ntype set(int i, ntype val);
     double modulus() const;

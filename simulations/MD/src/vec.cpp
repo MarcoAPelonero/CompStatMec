@@ -34,6 +34,12 @@ Vector::Vector(const Vector& other) { // Copy constructor
     }
 }
 
+Vector::Vector(ntype x, ntype y, ntype z) {
+    r[0] = x;
+    r[1] = y;
+    r[2] = z;
+}
+
 Vector::~Vector() {}
 
 void Vector::show(std::string name) const {

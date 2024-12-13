@@ -2,7 +2,13 @@
 #include <iomanip>
 
 molecularDynamicsSimulation::molecularDynamicsSimulation(int numParticles, ntype boxSize, ntype dt, int numSteps, ntype temperature)
-    : ensemble(numParticles, boxSize), dt(dt), numSteps(numSteps), temperature(temperature), method(EULER) {}
+    : ensemble(numParticles, boxSize), dt(dt), numSteps(numSteps), temperature(temperature), method(EULER) {
+        // remove
+        Vector disp = Vector{20.0,20.0,20.0};
+        for (int i = 0; i < ensemble.getNumParticles(); ++i) {
+            ensemble(i).setPosition(ensemble(i).getPosition() + disp);
+        }
+    }
 
 molecularDynamicsSimulation::~molecularDynamicsSimulation() {}
 
@@ -51,6 +57,7 @@ void molecularDynamicsSimulation::Euler(std::ofstream &outFile) {
             ensemble.stepEuler(j, dt);
         }
         bar.update(i);
+        ensemble.updateEnsembleEnergy();
         ensemble.ensembleSnapshot(outFile);
     }
     bar.finish();
@@ -66,6 +73,7 @@ void molecularDynamicsSimulation::EulerCromer(std::ofstream &outFile) {
             ensemble.stepEulerCromer(j, dt);
         }
         bar.update(i);
+        ensemble.updateEnsembleEnergy();
         ensemble.ensembleSnapshot(outFile);
     }
     bar.finish();
@@ -87,8 +95,6 @@ void molecularDynamicsSimulation::LeapFrog(std::ofstream &outFile) {
 
 void molecularDynamicsSimulation::VelocityVerlet (std::ofstream &outFile) {
     std::cout << "Running Velocity Verlet" << std::endl;
-    int thermoSteps = 10;
-    ntype kb = 1.0;
     ProgressBar bar(numSteps);
     for (int i = 0; i < numSteps; ++i) {
         ensemble.updateEnsemble();
@@ -100,6 +106,7 @@ void molecularDynamicsSimulation::VelocityVerlet (std::ofstream &outFile) {
             ensemble.stepVelocityVerlet(j, dt);
         }
         bar.update(i);
+        ensemble.updateEnsembleEnergy();
         ensemble.ensembleSnapshot(outFile);
     }
     bar.finish();
@@ -138,6 +145,7 @@ void molecularDynamicsSimulation::ThermoVelocityVerlet (std::ofstream &outFile) 
                 ensemble(p).setVelocity(v);
             }
         }
+        ensemble.updateEnsembleEnergy();
         ensemble.ensembleSnapshot(outFile);
     }
     bar.finish();
@@ -145,4 +153,8 @@ void molecularDynamicsSimulation::ThermoVelocityVerlet (std::ofstream &outFile) 
 
 void molecularDynamicsSimulation::setIntegrationMethod(IntegrationMethod method) {
     this->method = method;
+}
+
+particleEnsemble molecularDynamicsSimulation::getEnsemble() {
+    return ensemble;
 }

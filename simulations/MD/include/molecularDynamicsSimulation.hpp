@@ -36,6 +36,8 @@ class molecularDynamicsSimulation {
         void LeapFrog(std::ofstream &outFile);
         void VelocityVerlet(std::ofstream &outFile);
         void ThermoVelocityVerlet(std::ofstream &outFile);
+
+        particleEnsemble getEnsemble();
 };
 
 #endif // MOLECULARDYNAMICSSIMULATION_HPP

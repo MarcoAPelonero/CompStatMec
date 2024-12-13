@@ -57,7 +57,7 @@ ntype interactionPotential::minimalImageDistance(const Vector &r1, const Vector 
 }
 
 ntype interactionPotential::lennardJones(ntype r) {
-    if (r <= 0) return 0.0;
+    // if (r <= 0) return 0.0; 
     ntype sr6 = std::pow(sigma / r, 6);
     ntype sr12 = sr6 * sr6;
     return 4.0 * epsilon * (sr12 - sr6);
