@@ -46,6 +46,7 @@ class Particle {
         Vector getOldAcceleration();
         ntype getMass();
         ntype getKinetic();
+        ntype getPotential();
         ntype getEnergy();
         
         Particle& operator=(Particle& p);

@@ -57,7 +57,6 @@ ntype interactionPotential::minimalImageDistance(const Vector &r1, const Vector 
 }
 
 ntype interactionPotential::lennardJones(ntype r) {
-    // if (r <= 0) return 0.0; 
     ntype sr6 = std::pow(sigma / r, 6);
     ntype sr12 = sr6 * sr6;
     return 4.0 * epsilon * (sr12 - sr6);
@@ -89,10 +88,10 @@ ntype interactionPotential::computeForceMagnitudeLennardJones(ntype r) {
 }
 
 // Deprecated: If needed, ensure this also uses minimal image properly.
-ntype interactionPotential::computeForceLennardJones(Vector r1, Vector r2) {
+Vector interactionPotential::computeForceLennardJones(Vector r1, Vector r2) {
     Vector dr = minimalImageDisplacement(r1, r2);
     ntype r = dr.modulus();
-    return computeForceMagnitudeLennardJones(r);
+    return dr * computeForceMagnitudeLennardJones(r);
 }
 
 ntype interactionPotential::coulomb(ntype r) {

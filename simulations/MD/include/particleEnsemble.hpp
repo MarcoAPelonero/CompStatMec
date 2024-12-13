@@ -3,6 +3,7 @@
 
 #include "particle.hpp"
 #include "interactionPotential.hpp"
+#include "progressBar.hpp"
 #include <vector>
 #include <fstream>
 
@@ -22,22 +23,23 @@ class particleEnsemble {
         int getNumParticles();
 
         void show();
-
-        void stepEuler(int i, ntype dt);
-        void stepEulerCromer(int i, ntype dt);
-        void stepLeapFrog(int i, ntype dt);
-        void stepVerlet(int i, ntype dt);
-        void stepVelocityVerlet(int i, ntype dt);
+        void storeEnsemble();
         
-        void computeForceAndEnergyForParticle(int i, Vector &pos, Vector &force, ntype &potentialEnergy);
+        ntype getEnsembleEnergy();
+
         void applyPeriodicBoundary(Vector &pos);
 
-        void updateEnsemblePositions();
-        void updateEnsemble();
-
         void ensembleSnapshot(std::ofstream &outFile, bool writeHeader = false);
-        void updateEnsembleEnergy();
-        ntype getEnsembleEnergy();  
+
+        void particleEnergyStep(int particleIndex);
+        void ensembleStep();
+        void ensembleAverageEnergy();
+
+        void Euler(ntype dt, int numSteps, std::ofstream &outFile);
+        void EulerCromer(ntype dt, int numSteps, std::ofstream &outFile);
+        void SpeedVerlet(ntype dt, int numSteps, std::ofstream &outFile); 
+        void PredictorCorrector(ntype dt, int numSteps, std::ofstream &outFile);
+        void ThermoSpeedVerlet(ntype dt, int numSteps, std::ofstream &outFile, ntype temperature = 1.0, int thermoSteps = 10);  
 };
 
 #endif // PARTICLEENSEMBLE_HPP

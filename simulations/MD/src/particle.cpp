@@ -81,6 +81,10 @@ ntype Particle::getKinetic() {
     return kinetic;
 }
 
+ntype Particle::getPotential() {
+    return potential;
+}
+
 ntype Particle::getEnergy() {
     return energy;
 }

@@ -32,7 +32,7 @@ class interactionPotential {
         ntype coulomb(ntype r);
 
         ntype computeForceMagnitudeLennardJones(ntype r);
-        ntype computeForceLennardJones(Vector r1, Vector r2);
+        Vector computeForceLennardJones(Vector r1, Vector r2);
         ntype computeForceMagnitudeCoulomb(ntype r);
         ntype computeForceCoulomb(Vector r1, Vector r2);
 };

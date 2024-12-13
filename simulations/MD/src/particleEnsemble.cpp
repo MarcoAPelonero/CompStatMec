@@ -2,6 +2,10 @@
 #include <cmath>
 #include <random>
 #include <iostream>
+#include <iomanip>
+#include <iostream>
+#include <limits>
+
 
 particleEnsemble::particleEnsemble(int numParticles, ntype boxSize)
     : numParticles(numParticles), boxSize(boxSize), potential(boxSize) {
@@ -9,7 +13,7 @@ particleEnsemble::particleEnsemble(int numParticles, ntype boxSize)
     ntype spacing = boxSize / particlesPerSide;
 
     std::default_random_engine generator;
-    std::normal_distribution<ntype> distribution(0.0, 0.5); // smaller std to reduce initial explosion
+    std::normal_distribution<ntype> distribution(0.0, 1); 
 
     int count = 0;
     for (int i = 0; i < particlesPerSide && count < numParticles; ++i) {
@@ -17,7 +21,6 @@ particleEnsemble::particleEnsemble(int numParticles, ntype boxSize)
             for (int k = 0; k < particlesPerSide && count < numParticles; ++k) {
                 Particle p(Vector{i * spacing, j * spacing, k * spacing});
 
-                // Smaller initial velocities:
                 ntype vx = distribution(generator);
                 ntype vy = distribution(generator);
                 ntype vz = distribution(generator);
@@ -30,16 +33,20 @@ particleEnsemble::particleEnsemble(int numParticles, ntype boxSize)
             }
         }
     }
-    for (int i = 0; i < numParticles; ++i) {
-        Vector fij{0.0,0.0,0.0};
-        ntype potentialEnergy = 0.0;
-        Vector r1 = particles[i].getPosition();
-        computeForceAndEnergyForParticle(i, r1, fij, potentialEnergy);
-        particles[i].setPotential(potentialEnergy);
-        particles[i].computeKinetic();
-        particles[i].updateEnergy();
+
+    ntype minDistance = std::numeric_limits<ntype>::max();
+    for (size_t i = 0; i < particles.size(); ++i) {
+        for (size_t j = i + 1; j < particles.size(); ++j) {
+            ntype distance = (particles[i].getPosition() - particles[j].getPosition()).modulus();
+            if (distance < minDistance) {
+                minDistance = distance;
+            }
+        }
     }
-    updateEnsembleEnergy();
+    std::cout << "Minimum distance between particles: " << minDistance << std::endl;
+
+    ensembleEnergy = 0.0;
+    ensembleStep();
 }
 
 particleEnsemble::~particleEnsemble() {
@@ -54,6 +61,10 @@ int particleEnsemble::getNumParticles() {
     return numParticles;
 }
 
+ntype particleEnsemble::getEnsembleEnergy() {
+    return ensembleEnergy;
+}
+
 void particleEnsemble::show() {
     for (int i = 0; i < numParticles; ++i) {
         std::cout << "Particle " << i+1 << ":\n";
@@ -61,23 +72,6 @@ void particleEnsemble::show() {
     }
 }
 
-// Helper method to compute force and potential energy for a single particle i at a given position
-void particleEnsemble::computeForceAndEnergyForParticle(int i, Vector &pos, Vector &force, ntype &potentialEnergy) {
-    force = Vector{0.0, 0.0, 0.0};
-    potentialEnergy = 0.0;
-
-    for (int j = 0; j < numParticles; ++j) {
-        if (i == j) continue;
-        Vector dr = potential.minimalImageDisplacement(pos, particles[j].getOldPosition());
-        ntype r = dr.modulus();
-        ntype pe = potential.lennardJones(r);
-        ntype f = potential.computeForceMagnitudeLennardJones(r);
-        potentialEnergy += pe;
-        force += (dr / r) * f;
-    }
-}
-
-// Apply periodic boundary conditions
 void particleEnsemble::applyPeriodicBoundary(Vector &pos) {
     for (int i = 0; i < dim; ++i) {
         if (pos(i) < 0) {
@@ -88,126 +82,6 @@ void particleEnsemble::applyPeriodicBoundary(Vector &pos) {
     }
 }
 
-// Euler step for a single particle
-void particleEnsemble::stepEuler(int i, ntype dt) {
-    Vector r1 = particles[i].getPosition();
-    Vector v  = particles[i].getVelocity();
-
-    Vector fij;
-    ntype potentialEnergy;
-    computeForceAndEnergyForParticle(i, r1, fij, potentialEnergy);
-
-    Vector a = fij / particles[i].getMass();
-    Vector newPosition = r1 + v * dt;
-    Vector newVelocity = v + a * dt;
-
-    applyPeriodicBoundary(newPosition);
-
-    particles[i].setPosition(newPosition);
-    particles[i].setVelocity(newVelocity);
-    particles[i].setPotential(potentialEnergy);
-    particles[i].computeKinetic();
-    particles[i].updateEnergy();
-}
-
-void particleEnsemble::stepEulerCromer(int i, ntype dt) {
-    Vector r1 = particles[i].getOldPosition();
-    Vector v  = particles[i].getOldVelocity();
-
-    Vector fij{0.0,0.0,0.0};
-    ntype potentialEnergy = 0;
-    computeForceAndEnergyForParticle(i, r1, fij, potentialEnergy);
-
-    Vector a = fij / particles[i].getMass();
-    // a.show("Acceleration: ");
-    Vector newVelocity = v + a * dt;
-    Vector newPosition = r1 + newVelocity * dt;
-
-    applyPeriodicBoundary(newPosition);
-
-    particles[i].setPosition(newPosition);
-    particles[i].setVelocity(newVelocity);
-    particles[i].setPotential(potentialEnergy);
-    particles[i].computeKinetic();
-    particles[i].updateEnergy();
-}
-
-//NOT USABLE AT THE MOMENT
-void particleEnsemble::stepLeapFrog(int i, ntype dt) {
-    // Positions and velocities from previous time
-    Vector r_old = particles[i].getOldPosition();
-    Vector v_half_old = particles[i].getOldVelocity(); // assumed half-step velocity
-
-    // Update position
-    Vector r_new = r_old + v_half_old * dt;
-    applyPeriodicBoundary(r_new);
-
-    // Compute new acceleration at t+dt
-    Vector fij_new;
-    ntype potentialEnergy;
-    computeForceAndEnergyForParticle(i, r_new, fij_new, potentialEnergy);
-    Vector a_new = fij_new / particles[i].getMass();
-
-    // Update half-step velocity: v(t+3dt/2) = v(t+dt/2) + a(t+dt)*dt
-    Vector v_half_new = v_half_old + a_new * dt;
-
-    particles[i].setPosition(r_new);
-    particles[i].setVelocity(v_half_new);
-    // particles[i].updateEnergy(potentialEnergy);
-}
-
-void particleEnsemble::stepVerlet(int i, ntype dt) {
-    Vector r1 = particles[i].getOldPosition();
-    Vector v  = particles[i].getOldVelocity();
-
-    Vector fij{0.0,0.0,0.0};
-    ntype potentialEnergy = 0.0;
-    computeForceAndEnergyForParticle(i, r1, fij, potentialEnergy);
-    Vector a = fij / particles[i].getMass();
-    if (potentialEnergy == 0.0) {
-        std::cerr << "Potential energy is zero. Check for errors.\n";
-    }
-    // a.show("Acceleartion: ");
-    Vector newPosition = r1 + (v * dt) + a * (0.5 * dt * dt);
-    applyPeriodicBoundary(newPosition);
-    particles[i].setPosition(newPosition);
-    particles[i].setAcceleration(a);
-    particles[i].setPotential(potentialEnergy);
-}
-
-// Velocity Verlet step for a single particle
-void particleEnsemble::stepVelocityVerlet(int i, ntype dt) {
-    Vector newPosition = particles[i].getPosition(); 
-    Vector v = particles[i].getOldVelocity();
-    Vector fij_new{0.0,0.0,0.0};
-    Vector a = particles[i].getAcceleration();
-    ntype dummyEnergy = 0.0; // potentialEnergy stored for the initial pos only, or reassign here if desired
-    computeForceAndEnergyForParticle(i, newPosition, fij_new, dummyEnergy);
-    Vector a_new = fij_new / particles[i].getMass();
-    // std::cout << std::endl;
-    // a.show("Old acceleration: ");
-    // a_new.show("New acceleration: ");
-    // Velocity full-step
-    Vector newVelocity = v + (a + a_new) * (0.5 * dt);
-
-    particles[i].setVelocity(newVelocity);
-    particles[i].computeKinetic();
-    particles[i].setAcceleration(a_new);
-    particles[i].updateEnergy();
-}
-
-void particleEnsemble::updateEnsemblePositions() {
-    for (int i = 0; i < numParticles; ++i) {
-        particles[i].storePosition();
-    }
-}
-
-void particleEnsemble::updateEnsemble() {
-    for (int i = 0; i < numParticles; ++i) {
-        particles[i].store();
-    }
-}
-
 void particleEnsemble::ensembleSnapshot(std::ofstream &outFile, bool writeHeader) {
     if (writeHeader) {
         outFile << "x y z vx vy vz energy\n";
@@ -215,7 +89,7 @@ void particleEnsemble::ensembleSnapshot(std::ofstream &outFile, bool writeHeader
     for (int i = 0; i < numParticles; ++i) {
         Vector pos = particles[i].getPosition();
         Vector vel = particles[i].getVelocity();
-        ntype E = particles[i].getEnergy();
+        ntype E = particles[i].getPotential();
         outFile << pos(0) << " " << pos(1) << " " << pos(2) << " "
                 << vel(0) << " " << vel(1) << " " << vel(2) << " "
                 << E << "\n";
@@ -223,13 +97,235 @@ void particleEnsemble::ensembleSnapshot(std::ofstream &outFile, bool writeHeader
     outFile << "\n";
 }
 
-void particleEnsemble::updateEnsembleEnergy() {
-    ntype energy = 0;
+void particleEnsemble::particleEnergyStep(int particleIndex){
+    Vector position = particles[particleIndex].getPosition();
+    ntype LJ = 0.0;
     for (int i = 0; i < numParticles; ++i) {
-        energy += particles[i].getEnergy();
+        if (i == particleIndex) continue;
+        ntype dr = potential.minimalImageDistance(position, particles[i].getPosition());
+        LJ += potential.lennardJones(dr);
+    }
+    particles[particleIndex].setPotential(LJ);
+    particles[particleIndex].computeKinetic();
+    particles[particleIndex].updateEnergy();
+}
+
+void particleEnsemble::ensembleStep() {
+    for (int i = 0; i < numParticles; ++i) {
+        particleEnergyStep(i);
     }
 }
 
-ntype particleEnsemble::getEnsembleEnergy() {
-    return ensembleEnergy;
+void particleEnsemble::storeEnsemble() {
+    for (int i = 0; i < numParticles; ++i) {
+        particles[i].store();
+    }
+}
+
+void particleEnsemble::ensembleAverageEnergy() {
+    ntype avg = 0.0;
+    for (int i = 0; i < numParticles; ++i) {
+        avg += particles[i].getEnergy();
+    }
+    ensembleEnergy = avg / numParticles;
+}
+
+void particleEnsemble::Euler(ntype dt, int numSteps, std::ofstream &outFile) {
+
+    ProgressBar pbar(numSteps);
+
+    for (int i = 0; i < numSteps; ++i) {
+        ensembleSnapshot(outFile, false);
+        storeEnsemble();
+        for (int j = 0; j < numParticles; ++j) {
+            Vector oldPos = particles[j].getOldPosition();
+            Vector oldVel = particles[j].getOldVelocity();
+            Vector Force(0.0,0.0,0.0); 
+            for (int k = 0; k < numParticles; ++k) {
+                if (k != j) {
+                    Force += potential.computeForceLennardJones(oldPos, particles[k].getOldPosition());
+                }
+            }
+            Vector newAcc = Force / particles[j].getMass();
+
+            Vector newPos = oldPos + oldVel * dt;
+            Vector newVel = oldVel + newAcc * dt;
+
+            applyPeriodicBoundary(newPos);
+            for (int k = 0; k < dim; ++k) {
+                if (newPos(k) < 0 || newPos(k) >= boxSize) {
+                    std::cerr << "Particle " << j << " escaped the box\n";
+                    std::cerr << "Position: ";
+                    newPos.show();
+                }
+            }
+            particles[j].setPosition(newPos);
+            particles[j].setVelocity(newVel);
+        }
+        ensembleStep();
+        pbar.update(i);
+    }
+    pbar.finish();
+    ensembleAverageEnergy();
+    std::cout << std::setprecision(10);
+    std::cout << "Average energy: " << ensembleEnergy << std::endl;
+}
+
+void particleEnsemble::EulerCromer(ntype dt, int numSteps, std::ofstream &outFile) {
+
+    ProgressBar pbar(numSteps);
+
+    for (int i = 0; i < numSteps; ++i) {
+        ensembleSnapshot(outFile, false);
+        storeEnsemble();
+        for (int j = 0; j < numParticles; ++j) {
+            Vector oldPos = particles[j].getOldPosition();
+            Vector oldVel = particles[j].getOldVelocity();
+            Vector Force(0.0,0.0,0.0); 
+            for (int k = 0; k < numParticles; ++k) {
+                if (k != j) {
+                    Force += potential.computeForceLennardJones(oldPos, particles[k].getOldPosition());
+                }
+            }
+            Vector newAcc = Force / particles[j].getMass();
+
+            Vector newVel = oldVel + newAcc * dt;
+            Vector newPos = oldPos + newVel * dt;
+
+            applyPeriodicBoundary(newPos);
+            for (int k = 0; k < dim; ++k) {
+                if (newPos(k) < 0 || newPos(k) >= boxSize) {
+                    std::cerr << "Particle " << j << " escaped the box\n";
+                    std::cerr << "Position: ";
+                    newPos.show();
+                }
+            }
+            particles[j].setPosition(newPos);
+            particles[j].setVelocity(newVel);
+        }
+        ensembleStep();
+        pbar.update(i);
+    }
+    pbar.finish();
+    ensembleAverageEnergy();
+    std::cout << std::setprecision(10);
+    std::cout << "Average energy: " << ensembleEnergy << std::endl;
+}
+
+void particleEnsemble::SpeedVerlet(ntype dt, int numSteps, std::ofstream &outFile) {
+    ProgressBar pbar(numSteps);
+
+    for (int i = 0; i < numSteps; i++) {
+        ensembleSnapshot(outFile, false);
+        storeEnsemble();
+        for (int j = 0; j < numParticles; j++) {
+            Vector oldPos = particles[j].getOldPosition();
+            Vector oldVel = particles[j].getOldVelocity();
+            Vector Force(0.0,0.0,0.0);
+            for (int k = 0; k < numParticles; k++) {
+                if (k != j) {
+                    Force += potential.computeForceLennardJones(oldPos, particles[k].getOldPosition());
+                }
+            }
+            Vector newAcc = Force / particles[j].getMass();
+
+            Vector newPos = oldPos + oldVel * dt + newAcc * 0.5 * dt * dt;
+            applyPeriodicBoundary(newPos);
+            
+            particles[j].setAcceleration(newAcc);
+            particles[j].setPosition(newPos);
+        }
+        for (int j = 0; j < numParticles; j++) {
+            Vector oldPos = particles[j].getOldPosition();
+            Vector pos = particles[j].getPosition();
+            Vector Force(0.0,0.0,0.0);
+            for (int k = 0; k < numParticles; k++)
+                Force += potential.computeForceLennardJones(pos, particles[k].getPosition());
+            Vector newAcc = Force / particles[j].getMass();
+            Vector newVel = particles[j].getOldVelocity() + (particles[j].getAcceleration() + newAcc) * 0.5 * dt;
+            particles[j].setVelocity(newVel);
+        }
+        ensembleStep();
+        pbar.update(i);
+    }
+    pbar.finish();
+    ensembleAverageEnergy();
+    std::cout << std::setprecision(10);
+    std::cout << "Average energy: " << ensembleEnergy << std::endl;
+}
+
+void particleEnsemble::PredictorCorrector(ntype dt, int numSteps, std::ofstream &outFile) {
+    ProgressBar pbar(numSteps);
+
+    for (int i = 0; i < numSteps; i++) {
+        ensembleSnapshot(outFile, false);
+        storeEnsemble();
+        for (int j = 0; j < numParticles; j++) {
+            Vector r = particles[j].getPosition();
+            Vector v = particles[j].getVelocity();
+
+            Vector Force = Vector(0.0, 0.0, 0.0);
+            for (int k = 0; k < numParticles; k++) {
+                if (k != j) {
+                    Force += potential.computeForceLennardJones(r, particles[k].getPosition());
+                }
+            }
+            Vector rPredict = r + v * dt;
+            
+        }
+        ensembleStep();
+        pbar.update(i);
+    }
+}
+
+void particleEnsemble::ThermoSpeedVerlet(ntype dt, int numSteps, std::ofstream &outFile, ntype temperature, int thermoSteps) {
+    ProgressBar pbar(numSteps);
+
+    for (int i = 0; i < numSteps; i++) {
+        ensembleSnapshot(outFile, false);
+        storeEnsemble();
+        if (i % thermoSteps == 0) {
+            ntype currentTemperature = 0.0;
+            for (int j = 0; j < numParticles; j++) {
+                currentTemperature += particles[j].getKinetic() * 2.0 / (3.0 * particles[j].getMass());
+            }
+            ntype scaling = std::sqrt(temperature / currentTemperature);
+            for (int j = 0; j < numParticles; j++) {
+                particles[j].setVelocity(particles[j].getVelocity() * scaling);
+            }
+        }
+        for (int j = 0; j < numParticles; j++) {
+            Vector oldPos = particles[j].getOldPosition();
+            Vector oldVel = particles[j].getOldVelocity();
+            Vector Force(0.0,0.0,0.0);
+            for (int k = 0; k < numParticles; k++) {
+                if (k != j) {
+                    Force += potential.computeForceLennardJones(oldPos, particles[k].getOldPosition());
+                }
+            }
+            Vector newAcc = Force / particles[j].getMass();
+
+            Vector newPos = oldPos + oldVel * dt + newAcc * 0.5 * dt * dt;
+            applyPeriodicBoundary(newPos);
+            
+            particles[j].setAcceleration(newAcc);
+            particles[j].setPosition(newPos);
+        }
+        for (int j = 0; j < numParticles; j++) {
+            Vector oldPos = particles[j].getOldPosition();
+            Vector pos = particles[j].getPosition();
+            Vector Force(0.0,0.0,0.0);
+            for (int k = 0; k < numParticles; k++)
+                Force += potential.computeForceLennardJones(pos, particles[k].getPosition());
+            Vector newAcc = Force / particles[j].getMass();
+            Vector newVel = particles[j].getOldVelocity() + (particles[j].getAcceleration() + newAcc) * 0.5 * dt;
+            particles[j].setVelocity(newVel);
+        }
+        ensembleStep();
+        pbar.update(i);
+    }
+    pbar.finish();
+    ensembleAverageEnergy();
+    std::cout << std::setprecision(10);
+    std::cout << "Average energy: " << ensembleEnergy << std::endl;
 }
