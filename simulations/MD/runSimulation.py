@@ -107,8 +107,7 @@ def computeOrder(minDelta, maxDelta, numSimulations, numParticles=100, density=0
             continue
 
         stabilized_energies = total_energies[stabilization_index:]
-        plt.plot(stabilized_energies)
-        plt.show()
+        
         initial_energy = stabilized_energies[0]
 
         # Compute energy errors during the stabilized period

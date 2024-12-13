@@ -124,25 +124,20 @@ void molecularDynamicsSimulation::ThermoVelocityVerlet (std::ofstream &outFile) 
             int N = ensemble.getNumParticles();
             ntype totalKinetic = 0.0;
 
-            // Compute the instantaneous kinetic energy
             for (int p = 0; p < N; ++p) {
                 totalKinetic += ensemble(p).getKinetic();
             }
 
-            // Compute the current instantaneous temperature (3D case)
             ntype currentTemp = (2.0/3.0) * (totalKinetic / (N * kb));
 
-            // Compute the scaling factor
             ntype scaleFactor = std::sqrt(temperature / currentTemp);
 
-            // Rescale velocities
             for (int p = 0; p < N; ++p) {
                 Vector v = ensemble(p).getVelocity();
                 v = v * scaleFactor;
                 ensemble(p).setVelocity(v);
             }
         }
-        // std::cout << std::endl;
         ensemble.ensembleSnapshot(outFile);
     }
     bar.finish();

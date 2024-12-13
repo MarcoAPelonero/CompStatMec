@@ -39,7 +39,7 @@ ntype interactionPotential::getL() { return L; }
 ntype interactionPotential::getRcut() { return rcut; }
 
 // Minimal image displacement using L/2.0
-Vector interactionPotential::minimalImageDisplacement(Vector &r1, const Vector &r2) {
+Vector interactionPotential::minimalImageDisplacement(const Vector &r1, const Vector &r2) {
     Vector dr = r1 - r2;
     for (int i = 0; i < dim; ++i) {
         if (dr(i) > L/2) {
@@ -51,7 +51,7 @@ Vector interactionPotential::minimalImageDisplacement(Vector &r1, const Vector &
     return dr;
 }
 
-ntype interactionPotential::minimalImageDistance(Vector &r1, const Vector &r2) {
+ntype interactionPotential::minimalImageDistance(const Vector &r1, const Vector &r2) {
     Vector dr = minimalImageDisplacement(r1, r2);
     return dr.modulus();
 }

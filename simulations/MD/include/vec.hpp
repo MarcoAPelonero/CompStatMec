@@ -12,37 +12,38 @@
 
 class Vector {
 private:
-    double r[dim];
+    ntype r[dim];
 public:
     Vector();
     Vector(ntype val);
     Vector(std::initializer_list<ntype> list);
-    Vector(const Vector& other); // Copy constructor
+    Vector(const Vector& other);
     ~Vector();
-
-    void show(std::string name = "") const;
-    ntype get(int i) const;
     ntype set(int i, ntype val);
-    double modulus();
-    Vector norm();  
+    double modulus() const;
+    Vector norm() const; 
     void random();
     Vector& random(ntype L);
     friend Vector random(ntype L);
     static Vector randomVector();
 
+    void show(std::string name = "") const;
+    ntype get(int i) const;
+
     Vector& operator=(const Vector& v2);
-    Vector operator+(const Vector& v2);
-    Vector operator-(const Vector& v2);
-    double operator*(const Vector& v2);
-    Vector operator*(ntype scalar);
-    Vector operator/(ntype scalar);
+    Vector operator+(const Vector& v2) const;
+    Vector operator-(const Vector& v2) const; // Added const version
+    double operator*(const Vector& v2) const;
+    Vector operator*(ntype scalar) const;
+    Vector operator/(ntype scalar) const;
 
     Vector operator^(const Vector& v2) const;
     Vector& operator+=(const Vector& v2);
     Vector& operator-=(const Vector& v2);
     ntype& operator()(int index);
-    bool operator==(const Vector& v2);
-    bool operator!=(const Vector& v2);
+    const ntype& operator()(int index) const; // Added const version
+    bool operator==(const Vector& v2) const;
+    bool operator!=(const Vector& v2) const;
 };
 
 #endif // VEC_HPP

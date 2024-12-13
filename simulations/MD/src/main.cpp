@@ -6,9 +6,9 @@
 int main(int argc, char* argv[]) {
     int numParticles = 100; //300
     ntype density = 0.6;
-    ntype dt = 0.005;
+    ntype dt = 0.01;
     int numSteps = 10000;
-    ntype temperature = 1.8;
+    ntype temperature = 1;
     std::string outFileName = "ensemble_data.txt";
 
     if (argc > 1) {
