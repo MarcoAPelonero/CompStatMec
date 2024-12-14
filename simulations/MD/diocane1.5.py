@@ -34,12 +34,12 @@ def read_simulation_data(filename):
 
 if __name__ == "__main__":
     output_file = "output.txt"
-    density = 0.5
-    num_particles = 100
+    density = 0.6
+    num_particles = 500
     dt = 0.001
     num_steps = 10000
 
-    run_simulation(output_file, density, num_particles, dt, num_steps)
+    # run_simulation(output_file, density, num_particles, dt, num_steps)
     header, data = read_simulation_data(output_file)
 
     # Calculate average position

@@ -5,8 +5,8 @@ int main(int argc, char **argv) {
     // Default values
     const char* defaultOutputFile = "output.txt";
     ntype density = 0.6;
-    int numParticles = 200;
-    int numSteps = 1000;
+    int numParticles = 500;
+    int numSteps = 10000;
     ntype dt = 0.001;
 
     if (argc > 1) {

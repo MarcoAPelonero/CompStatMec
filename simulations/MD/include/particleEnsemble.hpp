@@ -39,7 +39,8 @@ class particleEnsemble {
         void EulerCromer(ntype dt, int numSteps, std::ofstream &outFile);
         void SpeedVerlet(ntype dt, int numSteps, std::ofstream &outFile); 
         void PredictorCorrector(ntype dt, int numSteps, std::ofstream &outFile);
-        void ThermoSpeedVerlet(ntype dt, int numSteps, std::ofstream &outFile, ntype temperature = 1.0, int thermoSteps = 10);  
+        void ThermoEulerCromer(ntype dt, int numSteps, std::ofstream &outFile, ntype temperature = 1.0, int thermoSteps = 10);
+        void ThermoSpeedVerlet(ntype dt, int numSteps, std::ofstream &outFile, ntype temperature = 1.0, int thermoSteps = 20);  
 };
 
 #endif // PARTICLEENSEMBLE_HPP
