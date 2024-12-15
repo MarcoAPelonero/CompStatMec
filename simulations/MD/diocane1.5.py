@@ -33,7 +33,7 @@ def read_simulation_data(filename):
         raise
 
 if __name__ == "__main__":
-    output_file = "output.txt"
+    output_file = "trajectory.dat"
     density = 0.6
     num_particles = 500
     dt = 0.001

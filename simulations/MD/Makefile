@@ -6,7 +6,7 @@ TEST_DIR = test
 # Compiler and flags
 CC = g++
 CXX = g++
-CFLAGS = -g -O3 -Wall -I$(INCLUDE_DIR)
+CFLAGS = -O2 -Wall -I$(INCLUDE_DIR)
 EXTRA_CFLAGS = -Wextra -pedantic -Wconversion -Wshadow
 LDFLAGS =
 

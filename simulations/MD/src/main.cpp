@@ -3,11 +3,11 @@
 
 int main(int argc, char **argv) {
     // Default values
-    const char* defaultOutputFile = "output.txt";
+    const char* defaultOutputFile = "trajectory.dat";
     ntype density = 0.6;
     int numParticles = 500;
     int numSteps = 10000;
-    ntype dt = 0.001;
+    ntype dt = 0.007;
 
     if (argc > 1) {
         defaultOutputFile = argv[1];
