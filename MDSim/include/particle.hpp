@@ -7,15 +7,16 @@ class Particle {
     private:
         double mass;
         Vec position, velocity, force;
-        double kineticEnergy, potentialEnergy, totalEnergy;
+        double virialEnergy, kineticEnergy, potentialEnergy, totalEnergy;
     public:
-        Particle() : mass(1.0), position(Vec()), velocity(Vec()), force(Vec()), kineticEnergy(0), potentialEnergy(0), totalEnergy(0) {}
-        Particle(double m, const Vec &p, const Vec &v) : mass(m), position(p), velocity(v), force(Vec()), kineticEnergy(0), potentialEnergy(0), totalEnergy(0) {}
+        Particle() : mass(1.0), position(Vec()), velocity(Vec()), force(Vec()), virialEnergy(0), kineticEnergy(0), potentialEnergy(0), totalEnergy(0) {}
+        Particle(double m, const Vec &p, const Vec &v) : mass(m), position(p), velocity(v), force(Vec()), virialEnergy(0), kineticEnergy(0), potentialEnergy(0), totalEnergy(0) {}
 
         double getMass() const { return mass; }
         Vec getPosition() const { return position; }
         Vec getVelocity() const { return velocity; }
         Vec getForce() const { return force; }
+        double getVirialEnergy() const { return virialEnergy; }
         double getKineticEnergy() const { return kineticEnergy; }
         double getPotentialEnergy() const { return potentialEnergy; }
         double getTotalEnergy() const { return totalEnergy; }
@@ -24,6 +25,7 @@ class Particle {
         void setPosition(const Vec &p) { position = p; }
         void setVelocity(const Vec &v) { velocity = v; }
         void setForce(const Vec &f) { force = f; }
+        void setVirialEnergy(double ve) { virialEnergy = ve; }
         void setKineticEnergy(double ke) { kineticEnergy = ke; }
         void setPotentialEnergy(double pe) { potentialEnergy = pe; }
         void setTotalEnergy(double te) { totalEnergy = te; }

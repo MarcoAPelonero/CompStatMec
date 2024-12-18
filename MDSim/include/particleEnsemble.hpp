@@ -14,13 +14,21 @@ private:
     double boxLength;
     std::mt19937 rng;
     std::normal_distribution<double> gaussian;
-    double totalEnergy, totalKineticEnergy, totalPotentialEnergy;
+    double totalEnergy, totalKineticEnergy, totalVirialEnergy, totalPotentialEnergy;
 
 public:
     ParticleEnsemble(int N, double L)
-        : numParticles (N), boxLength(L), rng(42), gaussian(0.0, 1.0), totalEnergy(0), totalKineticEnergy(0), totalPotentialEnergy(0) {
-        initializeParticles();
-    }
+    : numParticles(N),
+      boxLength(L),
+      rng(42),
+      gaussian(0.0, 1.0),
+      totalEnergy(0),
+      totalKineticEnergy(0),
+      totalVirialEnergy(0),
+      totalPotentialEnergy(0)
+{
+    initializeParticles();
+}
 
     void initializeParticles();
 
@@ -52,10 +60,14 @@ public:
     void computeEnergies();
     void computeEnsembleEnergies();
     void computeForces();
+    void computeVirial();
 
-    void ensembleThermalize(double temperature);
+    void ensembleThermalize(double temperature, double dt, double tauT = 0.1);
+    void ensemblePressurize(double pressure, double dt, double taup = 0.1);
+
     void ensembleStepEuler(double dt);  
     void ensembleStepEulerCromer(double dt);
+    void ensembleStepSpeedVerlet(double dt);
 
     void ensembleSnapshot(std::ofstream &file);
 };

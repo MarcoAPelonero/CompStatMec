@@ -8,16 +8,26 @@ def load_data(filename):
     with open(filename, 'r') as f:
         lines = f.readlines()
 
-    # Identify N_particles and steps
     particle_data = []
     step_data = []
+    L_values = []
     N_particles = 0
+    skip_next = False
 
     for line in tqdm(lines, desc='Loading data', total=len(lines)):
         stripped = line.strip()
+        if skip_next:
+            skip_next = False
+            continue
         if stripped:
-            numbers = list(map(float, stripped.split()))
-            step_data.append(numbers)
+            # Assuming L is a single float value
+            try:
+                L = float(stripped)
+                L_values.append(L)
+                skip_next = True  # Skip the next line (snapshot data)
+            except ValueError:
+                numbers = list(map(float, stripped.split()))
+                step_data.append(numbers)
         else:
             if step_data:
                 particle_data.append(step_data)
@@ -25,29 +35,28 @@ def load_data(filename):
                     N_particles = len(step_data)
                 step_data = []
 
-    # Append the last step
     if step_data:
         particle_data.append(step_data)
         if not N_particles:
             N_particles = len(step_data)
 
-    particle_data = np.array(particle_data)  # Convert to numpy array
-    return particle_data, N_particles
+    particle_data = np.array(particle_data)
+    return particle_data, N_particles, L_values
 
 # Visualization mode
-def visualize_3d_animation(data, N_particles):
+def visualize_3d_animation(data, N_particles, L_values):
     from mpl_toolkits.mplot3d import Axes3D
 
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
 
-    ax.set_xlim(0, 10)
-    ax.set_ylim(0, 10)
-    ax.set_zlim(0, 10)
-
     scatter = ax.scatter([], [], [], c='b', s=20)
 
     def update(frame):
+        L = L_values[frame]
+        ax.set_xlim(0, L)
+        ax.set_ylim(0, L)
+        ax.set_zlim(0, L)
         ax.set_title(f"Time step: {frame}")
         positions = data[frame, :, :3]
         scatter._offsets3d = (positions[:, 0], positions[:, 1], positions[:, 2])
@@ -73,14 +82,14 @@ def visualize_energy(data, N_particles):
         avg_mechanical.append(np.mean(mechanical))
 
     # Calculate average potential energy after 10% of steps
-    avg_potential_after_10pct = np.mean(avg_potential[int(0.1 * steps):])
+    avg_potential_after_10pct = np.mean(avg_potential[int(0.2 * steps):])
 
     time = np.arange(steps)
 
     fig, axs = plt.subplots(2, 2, figsize=(10, 8))
 
     axs[0, 0].plot(time, avg_potential, label='Avg Potential Energy')
-    axs[0, 0].set_title(f'Avg Potential Energy (After 10%: {avg_potential_after_10pct:.2f})')
+    axs[0, 0].set_title(f'Avg Potential Energy (After 20%: {avg_potential_after_10pct:.2f})')
 
     axs[0, 1].plot(time, avg_kinetic, label='Avg Kinetic Energy')
     axs[0, 1].set_title('Avg Kinetic Energy')
@@ -97,7 +106,7 @@ def visualize_energy(data, N_particles):
     plt.show()
 
 # Combined mode: 3D animation and live energy updates
-def visualize_combined(data, N_particles):
+def visualize_combined(data, N_particles, L_values):
     from mpl_toolkits.mplot3d import Axes3D
 
     steps = len(data)
@@ -105,15 +114,10 @@ def visualize_combined(data, N_particles):
 
     # 3D subplot
     ax3d = fig.add_subplot(121, projection='3d')
-    ax3d.set_xlim(0, 10)
-    ax3d.set_ylim(0, 10)
-    ax3d.set_zlim(0, 10)
     scatter = ax3d.scatter([], [], [], c='b', s=20)
 
     # Energy subplot
     ax_energy = fig.add_subplot(122)
-    ax_energy.set_xlim(0, steps)
-    ax_energy.set_ylim(0, 10)  # Adjust the limits as necessary
     ax_energy.set_title('Energy Evolution')
 
     potential_line, = ax_energy.plot([], [], label='Avg Potential Energy', color='r')
@@ -128,12 +132,15 @@ def visualize_combined(data, N_particles):
     avg_mechanical = []
 
     def update(frame):
-        # Update 3D animation
+        L = L_values[frame]
+        ax3d.set_xlim(0, L)
+        ax3d.set_ylim(0, L)
+        ax3d.set_zlim(0, L)
+
         positions = data[frame, :, :3]
         scatter._offsets3d = (positions[:, 0], positions[:, 1], positions[:, 2])
         ax3d.set_title(f"Time step: {frame}")
 
-        # Update energy data
         potential = data[frame, :, 6]
         kinetic = data[frame, :, 7]
         mechanical = data[frame, :, 8]
@@ -147,15 +154,15 @@ def visualize_combined(data, N_particles):
         mechanical_line.set_data(range(len(avg_mechanical)), avg_mechanical)
 
         ax_energy.set_xlim(0, len(avg_potential))
-        ax_energy.set_ylim(0, max(max(avg_potential), max(avg_kinetic), max(avg_mechanical)) * 1.1)
+        ax_energy.set_ylim(min(min(avg_potential), min(avg_kinetic), min(avg_mechanical)), max(max(avg_potential), max(avg_kinetic), max(avg_mechanical)) * 1.1)
 
     ani = FuncAnimation(fig, update, frames=steps, interval=20)
     plt.show()
 
 # Main script
 def main():
-    filename = 'trajectory.dat'
-    data, N_particles = load_data(filename)
+    filename = 'trajectory1.dat'
+    data, N_particles, L_values = load_data(filename)
     print(f"Loaded data with {N_particles} particles per step.")
 
     while True:
@@ -168,11 +175,11 @@ def main():
         mode = input("Enter mode (1/2/3/4): ").strip()
 
         if mode == '1':
-            visualize_3d_animation(data, N_particles)
+            visualize_3d_animation(data, N_particles, L_values)
         elif mode == '2':
             visualize_energy(data, N_particles)
         elif mode == '3':
-            visualize_combined(data, N_particles)
+            visualize_combined(data, N_particles, L_values)
         elif mode == '4':
             print("Exiting...")
             break
