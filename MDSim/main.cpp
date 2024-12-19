@@ -22,9 +22,10 @@ int main(int argc, char* argv[]) {
     double dt = 0.003;
     int numSteps = 5000;
     std::string fileName = "trajectory.dat";
+    std::string rdfName = "radialDistribution.dat";
     double taup = 1;
 
-    MolecularDynamicsSimulation::IntegrationMethod method = MolecularDynamicsSimulation::IntegrationMethod::ThermoSpeedVerlet;
+    MolecularDynamicsSimulation::IntegrationMethod method = MolecularDynamicsSimulation::IntegrationMethod::RDFSpeedVerlet;
 
     // Override with command-line arguments if provided
     if (argc > 1) N = std::atoi(argv[1]);
@@ -54,7 +55,7 @@ int main(int argc, char* argv[]) {
 
     double boxLenght = std::pow(N / rho, 1.0 / 3.0);
     
-    MolecularDynamicsSimulation simulation(N, boxLenght, dt, numSteps, fileName, method, T, p, taup);
+    MolecularDynamicsSimulation simulation(N, boxLenght, dt, numSteps, fileName, method, T, p, taup, rdfName);
 
     simulation.run();
 

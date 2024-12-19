@@ -16,6 +16,12 @@ private:
     std::normal_distribution<double> gaussian;
     double totalEnergy, totalKineticEnergy, totalVirialEnergy, totalPotentialEnergy;
 
+    // RDF-related variables
+    int rdfBins;
+    double rdfCutoff;
+    double rdfBinWidth;
+    std::vector<double> rdfHistogram;
+
 public:
     ParticleEnsemble(int N, double L)
     : numParticles(N),
@@ -25,10 +31,14 @@ public:
       totalEnergy(0),
       totalKineticEnergy(0),
       totalVirialEnergy(0),
-      totalPotentialEnergy(0)
-{
-    initializeParticles();
-}
+      totalPotentialEnergy(0),
+      rdfBins(100),        // default number of bins for RDF
+      rdfCutoff(L/2.0),    // will be recalculated dynamically anyway
+      rdfBinWidth((L/2.0)/100) // also recalculated dynamically
+    {
+        rdfHistogram.resize(rdfBins, 0.0);
+        initializeParticles();
+    }
 
     void initializeParticles();
 
@@ -63,13 +73,26 @@ public:
     void computeVirial();
 
     void ensembleThermalize(double temperature, double dt, double tauT = 0.1);
-    void ensemblePressurize(double pressure, double dt, double taup = 0.1);
+    void ensemblePressurize(double pressure, double dt, double tauP = 0.1);
 
-    void ensembleStepEuler(double dt);  
+    void ensembleStepEuler(double dt);
     void ensembleStepEulerCromer(double dt);
     void ensembleStepSpeedVerlet(double dt);
 
     void ensembleSnapshot(std::ofstream &file);
+
+    // RDF methods
+    void resetRDFHistogram();
+    void computeRadialDistributionFunctionDirect();
+    void computeRadialDistributionFunctionCellMethod();
+    void printRadialDistributionFunction(std::ofstream &file);
+
+private:
+    struct Cell {
+        std::vector<int> particleIndices; 
+    };
+
+    void buildCells(std::vector<Cell> &cells, int &numCellsPerDim, double &cellSize) const;
 };
 
 #endif // PARTICLE_ENSEMBLE_HPP

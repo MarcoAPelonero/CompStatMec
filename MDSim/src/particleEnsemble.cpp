@@ -320,3 +320,156 @@ void ParticleEnsemble::ensembleSnapshot(std::ofstream &file) {
     file << "\n"; 
 }
 
+
+void ParticleEnsemble::resetRDFHistogram() {
+    std::fill(rdfHistogram.begin(), rdfHistogram.end(), 0.0);
+}
+
+void ParticleEnsemble::computeRadialDistributionFunctionDirect() {
+    // Recalculate cutoff and bin width to adapt to the new box size
+    rdfCutoff = boxLength / 2.0;
+    rdfBinWidth = rdfCutoff / rdfBins;
+
+    resetRDFHistogram();
+
+    // Compute all pair distances
+    for (size_t i = 0; i < particles.size(); ++i) {
+        for (size_t j = i + 1; j < particles.size(); ++j) {
+            Vec dr = minimumImageConvention(particles[i], particles[j]);
+            double r = dr.length();
+            if (r < rdfCutoff) {
+                int bin = (int)std::floor(r / rdfBinWidth);
+                if (bin >= 0 && bin < rdfBins) {
+                    rdfHistogram[bin] += 2.0; // Count both i->j and j->i
+                }
+            }
+        }
+    }
+
+    // Normalize the RDF
+    double volume = boxLength * boxLength * boxLength;
+    double density = (double)particles.size() / volume;
+
+    for (int i = 0; i < rdfBins; ++i) {
+        double rLower = i * rdfBinWidth;
+        double rUpper = rLower + rdfBinWidth;
+        double shellVolume = (4.0 / 3.0) * M_PI * (rUpper*rUpper*rUpper - rLower*rLower*rLower);
+        double idealCount = density * shellVolume * (double)particles.size();
+        rdfHistogram[i] /= idealCount;
+    }
+}
+
+void ParticleEnsemble::buildCells(std::vector<Cell> &cells, int &numCellsPerDim, double &cellSize) const {
+    cellSize = rdfCutoff; 
+    numCellsPerDim = (int)std::floor(boxLength / cellSize);
+    if (numCellsPerDim < 1) numCellsPerDim = 1; // Fallback
+
+    cells.clear();
+    cells.resize(numCellsPerDim * numCellsPerDim * numCellsPerDim);
+
+    for (size_t i = 0; i < particles.size(); ++i) {
+        Vec pos = particles[i].getPosition();
+
+        int cx = (int)std::floor(pos.getX() / cellSize);
+        int cy = (int)std::floor(pos.getY() / cellSize);
+        int cz = (int)std::floor(pos.getZ() / cellSize);
+
+        // Adjust for periodic boundaries if needed
+        if (cx == numCellsPerDim) cx = numCellsPerDim - 1;
+        if (cy == numCellsPerDim) cy = numCellsPerDim - 1;
+        if (cz == numCellsPerDim) cz = numCellsPerDim - 1;
+
+        int cellIndex = cx + cy * numCellsPerDim + cz * numCellsPerDim * numCellsPerDim;
+        cells[cellIndex].particleIndices.push_back((int)i);
+    }
+}
+
+void ParticleEnsemble::computeRadialDistributionFunctionCellMethod() {
+    // Recalculate cutoff and bin width to adapt to the new box size
+    rdfCutoff = boxLength / 2.0;
+    rdfBinWidth = rdfCutoff / rdfBins;
+
+    resetRDFHistogram();
+
+    // Build cell list
+    std::vector<Cell> cells;
+    int numCellsPerDim;
+    double cellSize;
+    buildCells(cells, numCellsPerDim, cellSize);
+
+    int neighborOffsets[3] = {-1, 0, 1};
+
+    for (int cx = 0; cx < numCellsPerDim; ++cx) {
+        for (int cy = 0; cy < numCellsPerDim; ++cy) {
+            for (int cz = 0; cz < numCellsPerDim; ++cz) {
+                int cellIndex = cx + cy * numCellsPerDim + cz * numCellsPerDim * numCellsPerDim;
+                const std::vector<int> &cParticles = cells[cellIndex].particleIndices;
+
+                for (int nx : neighborOffsets) {
+                    for (int ny : neighborOffsets) {
+                        for (int nz : neighborOffsets) {
+                            int ncx = (cx + nx + numCellsPerDim) % numCellsPerDim;
+                            int ncy = (cy + ny + numCellsPerDim) % numCellsPerDim;
+                            int ncz = (cz + nz + numCellsPerDim) % numCellsPerDim;
+
+                            int neighborCellIndex = ncx + ncy * numCellsPerDim + ncz * numCellsPerDim * numCellsPerDim;
+                            const std::vector<int> &nParticles = cells[neighborCellIndex].particleIndices;
+
+                            if (neighborCellIndex == cellIndex) {
+                                // Same cell: avoid double counting pairs
+                                for (size_t i = 0; i < cParticles.size(); ++i) {
+                                    for (size_t j = i + 1; j < cParticles.size(); ++j) {
+                                        Vec dr = minimumImageConvention(particles[cParticles[i]], particles[cParticles[j]]);
+                                        double r = dr.length();
+                                        if (r < rdfCutoff) {
+                                            int bin = (int)std::floor(r / rdfBinWidth);
+                                            if (bin >= 0 && bin < rdfBins) {
+                                                rdfHistogram[bin] += 2.0; 
+                                            }
+                                        }
+                                    }
+                                }
+                            } else {
+                                // Different cell
+                                for (auto pi : cParticles) {
+                                    for (auto pj : nParticles) {
+                                        if (pi == pj) continue; 
+                                        Vec dr = minimumImageConvention(particles[pi], particles[pj]);
+                                        double r = dr.length();
+                                        if (r < rdfCutoff) {
+                                            int bin = (int)std::floor(r / rdfBinWidth);
+                                            if (bin >= 0 && bin < rdfBins) {
+                                                rdfHistogram[bin] += 1.0;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Normalize
+    double volume = boxLength * boxLength * boxLength;
+    double density = (double)particles.size() / volume;
+
+    for (int i = 0; i < rdfBins; ++i) {
+        double rLower = i * rdfBinWidth;
+        double rUpper = rLower + rdfBinWidth;
+        double shellVolume = (4.0 / 3.0) * M_PI * (rUpper*rUpper*rUpper - rLower*rLower*rLower);
+        double idealCount = density * shellVolume * (double)particles.size();
+        rdfHistogram[i] /= idealCount;
+    }
+}
+
+void ParticleEnsemble::printRadialDistributionFunction(std::ofstream &file) {
+    for (int i = 0; i < rdfBins; ++i) {
+        double r = (i + 0.5) * rdfBinWidth;
+        file << r << " " << rdfHistogram[i] << "\n";
+    }
+    file << "\n";
+}

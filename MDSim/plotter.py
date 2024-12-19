@@ -161,7 +161,7 @@ def visualize_combined(data, N_particles, L_values):
 
 # Main script
 def main():
-    filename = 'trajectory1.dat'
+    filename = 'trajectory.dat'
     data, N_particles, L_values = load_data(filename)
     print(f"Loaded data with {N_particles} particles per step.")
 

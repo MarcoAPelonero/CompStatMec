@@ -15,7 +15,9 @@ public:
         ThermoEulerCromer,
         ThermoSpeedVerlet,
         NPTEulerCromer,
-        NPTSpeedVerlet
+        NPTSpeedVerlet,
+        RDFEulerCromer,
+        RDFSpeedVerlet
     };
 
 private:
@@ -26,15 +28,16 @@ private:
     double temperature, pressure;
     double taup;
     std::string outputFileName;
+    std::string outputRDFFileName;
 
 public:
     MolecularDynamicsSimulation(int numParticles, double boxLength, double dt, 
                                 int numSteps, const std::string& fileName, 
-                                IntegrationMethod method, double T, double p, double tau)
+                                IntegrationMethod method, double T, double p, double tau, std::string rdfFileName = "") 
 
     : ensemble(numParticles, boxLength), integrationMethod(method), 
       timeStep(dt), totalSteps(numSteps), temperature(T), pressure(p), 
-      taup(tau), outputFileName(fileName) {}
+      taup(tau), outputFileName(fileName), outputRDFFileName(rdfFileName) {}
 
 
     ~MolecularDynamicsSimulation() {}
@@ -46,6 +49,9 @@ public:
     void runThermoSpeedVerlet(std::ofstream &trajectoryFile);
     void runNPTEulerCromer(std::ofstream &trajectoryFile);
     void runNPTSpeedVerlet(std::ofstream &trajectoryFile);
+
+    void runRDFEulerCromer(std::ofstream &trajectoryFile, std::ofstream &rdfFile);
+    void runRDFSpeedVerlet(std::ofstream &trajectoryFile, std::ofstream &rdfFile);
 
     void run();
 };

@@ -8,6 +8,15 @@ void MolecularDynamicsSimulation::run() {
         return;
     }
 
+    std::ofstream rdfFile;
+    if (outputRDFFileName != "") {
+        rdfFile.open(outputRDFFileName);
+        if (!rdfFile.is_open()) {
+            std::cerr << "Error: could not open " << outputRDFFileName << " for writing." << std::endl;
+            return;
+        }
+    }
+
     switch (integrationMethod) {
         case IntegrationMethod::Euler:
             std::cout << "Running Euler" << std::endl;
@@ -37,17 +46,24 @@ void MolecularDynamicsSimulation::run() {
             std::cout << "Running NPTSpeedVerlet" << std::endl;
             runNPTSpeedVerlet(trajectoryFile);
             break;
+        case IntegrationMethod::RDFEulerCromer:
+            std::cout << "Running RDFEulerCromer" << std::endl;
+            runRDFEulerCromer(trajectoryFile, rdfFile);
+            break;
+        case IntegrationMethod::RDFSpeedVerlet:
+            std::cout << "Running RDFSpeedVerlet" << std::endl;
+            runRDFSpeedVerlet(trajectoryFile, rdfFile);
+            break;
         default:
             std::cerr << "Error: unknown integration method." << std::endl;
             break;
     }
 
     trajectoryFile.close(); 
-
+    if (rdfFile.is_open()) rdfFile.close();
 }
 
 void MolecularDynamicsSimulation::runEuler(std::ofstream &trajectoryFile) {
-    std::cout << "Running Euler" << std::endl;
     ProgressBar progressBar(totalSteps);
     ensemble.ensembleSnapshot(trajectoryFile);
     for (int i = 0; i < totalSteps; ++i) {
@@ -128,4 +144,42 @@ void MolecularDynamicsSimulation::runNPTSpeedVerlet(std::ofstream &trajectory) {
         progressBar.update(i);
     }
     progressBar.finish(); 
+}
+
+void MolecularDynamicsSimulation::runRDFEulerCromer(std::ofstream &trajectoryFile, std::ofstream &rdfFile) {
+    ProgressBar progressBar(totalSteps);
+    ensemble.ensembleSnapshot(trajectoryFile);
+
+    for (int i = 0; i < totalSteps; ++i) {
+        // Integration step
+        ensemble.ensembleStepEulerCromer(timeStep);
+
+        // Compute and print RDF
+        ensemble.computeRadialDistributionFunctionDirect();
+        // Print step number first to differentiate time steps
+        rdfFile << "# Step " << i << "\n";
+        ensemble.printRadialDistributionFunction(rdfFile);
+
+        // Snapshot of positions
+        ensemble.ensembleSnapshot(trajectoryFile);
+
+        progressBar.update(i);
+    }
+    progressBar.finish();
+}
+
+void MolecularDynamicsSimulation::runRDFSpeedVerlet(std::ofstream &trajectoryFile, std::ofstream &rdfFile) {
+    ProgressBar progressBar(totalSteps);
+    ensemble.ensembleSnapshot(trajectoryFile);
+
+    for (int i = 0; i < totalSteps; ++i) {
+        ensemble.ensembleStepSpeedVerlet(timeStep);
+
+        ensemble.computeRadialDistributionFunctionDirect();
+        rdfFile << "# Step " << i << "\n";
+        ensemble.printRadialDistributionFunction(rdfFile);
+        ensemble.ensembleSnapshot(trajectoryFile);
+        progressBar.update(i);
+    }
+    progressBar.finish();
 }
