@@ -17,12 +17,12 @@ MolecularDynamicsSimulation::IntegrationMethod parseMethod(const std::string& me
 
 int main(int argc, char* argv[]) {
     // Default parameters
-    int N = 600;
+    int N = 800;
     double rho = 0.6;
     double T = 1.0;
     double p = 1.011;
-    double dt = 0.003;
-    int numSteps = 5000;
+    double dt = 0.001;
+    int numSteps = 10000;
     std::string fileName = "trajectory.dat";
     std::string rdfName = "radialDistribution.dat";
     double taup = 1;

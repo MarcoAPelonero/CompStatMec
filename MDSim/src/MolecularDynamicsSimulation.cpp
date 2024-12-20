@@ -153,9 +153,11 @@ void MolecularDynamicsSimulation::runRDFEulerCromer(std::ofstream &trajectoryFil
     auto start_time = std::chrono::high_resolution_clock::now(); // Start timing
 
     for (int i = 0; i < totalSteps; ++i) {
+        ensemble.ensembleThermalize(temperature, timeStep, taup);
         ensemble.ensembleStepEulerCromer(timeStep);
-        ensemble.computeRadialDistributionFunctionCellMethod();
+        ensemble.computeRadialDistributionFunctionDirect();
         rdfFile << "# Step " << i << "\n";
+        ensemble.computeThermodynamicsFromRDF(rdfFile);
         ensemble.printRadialDistributionFunction(rdfFile);
         ensemble.ensembleSnapshot(trajectoryFile);
         progressBar.update(i);

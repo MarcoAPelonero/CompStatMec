@@ -82,6 +82,17 @@ double ParticleEnsemble::LennardJonesPotential(const Particle &p1, const Particl
     return 4 * (1 / r12 - 1 / r6);
 }
 
+double ParticleEnsemble::computeTemperature() {
+    double temperature = (2.0 / 3.0) * totalKineticEnergy / numParticles;
+    return temperature;
+}
+
+double ParticleEnsemble::computePressure() {
+    double volume = boxLength * boxLength * boxLength;
+    double pressure = (2.0 * totalKineticEnergy + totalVirialEnergy) / (3.0 * volume);
+    return pressure;
+}
+
 void ParticleEnsemble::computePotentials() {
     for (auto& particle : particles) {
         particle.setPotentialEnergy(0.0);
@@ -458,6 +469,45 @@ void ParticleEnsemble::computeRadialDistributionFunctionCellMethod() {
         rdfHistogram[i] /= idealCount;
     }
 }
+
+void ParticleEnsemble::computeThermodynamicsFromRDF(std::ofstream &file) {
+    double temperature = computeTemperature();
+    double volume = boxLength * boxLength * boxLength;
+    double density = static_cast<double>(numParticles) / volume;
+
+    double dr = rdfBinWidth;
+    double energy_per_particle = 0.0;
+    double pressure_term = 0.0;
+    double k_B = 1.0; 
+
+    for (int i = 0; i < rdfBins; ++i) {
+        double r = (i + 0.5) * dr;   
+        double g_r = rdfHistogram[i];
+
+        double r2 = r*r;
+        double inv_r2 = 1.0 / r2;
+        double inv_r6 = inv_r2 * inv_r2 * inv_r2;   
+        double inv_r12 = inv_r6 * inv_r6;           
+
+        double u_r = 4.0 * (inv_r12 - inv_r6);     
+
+        energy_per_particle += g_r * u_r * (r2) * dr;
+
+        double inv_r7 = inv_r6 / (r*r);  
+        double inv_r13 = inv_r12 / (r*r); 
+        double du_dr = 24.0 * (2.0 * inv_r13 - inv_r7);
+
+        pressure_term += g_r * (4.0 * M_PI * (r*r*r) * du_dr) * dr;
+    }
+
+    energy_per_particle *= 2.0 * M_PI * density;
+    double total_potential_energy = energy_per_particle * numParticles;
+
+    double p = density * k_B * temperature - (2.0 / 3.0) * M_PI * density * density * pressure_term;
+
+    file << temperature << " " << energy_per_particle << " " << total_potential_energy << " " << p << "\n";
+}
+
 
 void ParticleEnsemble::printRadialDistributionFunction(std::ofstream &file) {
     for (int i = 0; i < rdfBins; ++i) {

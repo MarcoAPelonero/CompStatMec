@@ -65,6 +65,9 @@ public:
     double LennardJonesPotential(const Particle &p1, const Particle &p2) const;
     Vec LennardJonesForce(const Particle &p1, const Particle &p2) const;
 
+    double computeTemperature();
+    double computePressure();
+
     void computePotentials();
     void computeKinetics();
     void computeEnergies();
@@ -81,10 +84,11 @@ public:
 
     void ensembleSnapshot(std::ofstream &file);
 
-    // RDF methods
     void resetRDFHistogram();
     void computeRadialDistributionFunctionDirect();
     void computeRadialDistributionFunctionCellMethod();
+    void computeThermodynamicsFromRDF(std::ofstream &file);
+
     void printRadialDistributionFunction(std::ofstream &file);
 
 private:
