@@ -17,17 +17,17 @@ MolecularDynamicsSimulation::IntegrationMethod parseMethod(const std::string& me
 
 int main(int argc, char* argv[]) {
     // Default parameters
-    int N = 400;
+    int N = 800;
     double rho = 0.6;
     double T = 1.0;
     double p = 1.011;
-    double dt = 0.004;
-    int numSteps = 5000;
+    double dt = 0.008;
+    int numSteps = 3000;
     std::string fileName = "trajectory.dat";
     std::string rdfName = "radialDistribution.dat";
     double taup = 1;
 
-    MolecularDynamicsSimulation::IntegrationMethod method = MolecularDynamicsSimulation::IntegrationMethod::ThermoSpeedVerlet;
+    MolecularDynamicsSimulation::IntegrationMethod method = MolecularDynamicsSimulation::IntegrationMethod::ThermoEulerCromer;
 
     // Override with command-line arguments if provided
     if (argc > 1) N = std::atoi(argv[1]);
@@ -35,25 +35,18 @@ int main(int argc, char* argv[]) {
     if (argc > 3) dt = std::atof(argv[3]);
     if (argc > 4) numSteps = std::atoi(argv[4]);
     if (argc > 5) fileName = argv[5];
-    if (argc > 6) {
+    if (argc > 6) rdfName = argv[6];
+    if (argc > 7) {
         try {
-            method = parseMethod(argv[6]);
+            method = parseMethod(argv[7]);
         } catch (const std::invalid_argument& e) {
             std::cerr << e.what() << std::endl;
             return 1;
         }
     }
-    if (argc > 7) T = std::atof(argv[7]);
-    if (argc > 8) p = std::atof(argv[8]);
-    if (argc > 9) taup = std::atof(argv[9]);
-
-    std::cout << "Running simulation with: "<< 
-        "\nN = " << N << 
-        "\nrho = " << rho << 
-        "\nT = " << T << 
-        "\ndt = " << dt << 
-        "\nnumSteps = " << numSteps << 
-        "\nfileName = " << fileName << std::endl;
+    if (argc > 8) T = std::atof(argv[8]);
+    if (argc > 9) p = std::atof(argv[9]);
+    if (argc > 10) taup = std::atof(argv[10]);
 
     double boxLenght = std::pow(N / rho, 1.0 / 3.0);
     
