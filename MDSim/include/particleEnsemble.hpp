@@ -32,9 +32,9 @@ public:
       totalKineticEnergy(0),
       totalVirialEnergy(0),
       totalPotentialEnergy(0),
-      rdfBins(100),        // default number of bins for RDF
-      rdfCutoff(L/2.0),    // will be recalculated dynamically anyway
-      rdfBinWidth((L/2.0)/100) // also recalculated dynamically
+      rdfBins(1000),       
+      rdfCutoff(L/2.0),    
+      rdfBinWidth((L/2.0)/100) 
     {
         rdfHistogram.resize(rdfBins, 0.0);
         initializeParticles();

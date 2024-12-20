@@ -10,6 +10,8 @@ MolecularDynamicsSimulation::IntegrationMethod parseMethod(const std::string& me
     if (methodStr == "ThermoSpeedVerlet") return MolecularDynamicsSimulation::IntegrationMethod::ThermoSpeedVerlet;
     if (methodStr == "NPTEulerCromer") return MolecularDynamicsSimulation::IntegrationMethod::NPTEulerCromer;
     if (methodStr == "NPTSpeedVerlet") return MolecularDynamicsSimulation::IntegrationMethod::NPTSpeedVerlet;
+    if (methodStr == "RDFEulerCromer") return MolecularDynamicsSimulation::IntegrationMethod::RDFEulerCromer;
+    if (methodStr == "RDFSpeedVerlet") return MolecularDynamicsSimulation::IntegrationMethod::RDFSpeedVerlet;
     throw std::invalid_argument("Invalid integration method: " + methodStr);
 }
 
@@ -25,7 +27,7 @@ int main(int argc, char* argv[]) {
     std::string rdfName = "radialDistribution.dat";
     double taup = 1;
 
-    MolecularDynamicsSimulation::IntegrationMethod method = MolecularDynamicsSimulation::IntegrationMethod::RDFSpeedVerlet;
+    MolecularDynamicsSimulation::IntegrationMethod method = MolecularDynamicsSimulation::IntegrationMethod::RDFEulerCromer;
 
     // Override with command-line arguments if provided
     if (argc > 1) N = std::atoi(argv[1]);

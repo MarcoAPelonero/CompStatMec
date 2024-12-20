@@ -150,22 +150,21 @@ void MolecularDynamicsSimulation::runRDFEulerCromer(std::ofstream &trajectoryFil
     ProgressBar progressBar(totalSteps);
     ensemble.ensembleSnapshot(trajectoryFile);
 
-    for (int i = 0; i < totalSteps; ++i) {
-        // Integration step
-        ensemble.ensembleStepEulerCromer(timeStep);
+    auto start_time = std::chrono::high_resolution_clock::now(); // Start timing
 
-        // Compute and print RDF
-        ensemble.computeRadialDistributionFunctionDirect();
-        // Print step number first to differentiate time steps
+    for (int i = 0; i < totalSteps; ++i) {
+        ensemble.ensembleStepEulerCromer(timeStep);
+        ensemble.computeRadialDistributionFunctionCellMethod();
         rdfFile << "# Step " << i << "\n";
         ensemble.printRadialDistributionFunction(rdfFile);
-
-        // Snapshot of positions
         ensemble.ensembleSnapshot(trajectoryFile);
-
         progressBar.update(i);
     }
     progressBar.finish();
+
+    auto end_time = std::chrono::high_resolution_clock::now(); // End timing
+    std::chrono::duration<double> elapsed = end_time - start_time;
+    std::cout << "Simulation completed in " << elapsed.count() << " seconds." << std::endl;
 }
 
 void MolecularDynamicsSimulation::runRDFSpeedVerlet(std::ofstream &trajectoryFile, std::ofstream &rdfFile) {

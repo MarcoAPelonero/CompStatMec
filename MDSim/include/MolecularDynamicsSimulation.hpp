@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <chrono>
 #include "ProgressBar.hpp"
 #include "ParticleEnsemble.hpp"
 

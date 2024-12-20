@@ -326,13 +326,11 @@ void ParticleEnsemble::resetRDFHistogram() {
 }
 
 void ParticleEnsemble::computeRadialDistributionFunctionDirect() {
-    // Recalculate cutoff and bin width to adapt to the new box size
     rdfCutoff = boxLength / 2.0;
     rdfBinWidth = rdfCutoff / rdfBins;
 
     resetRDFHistogram();
 
-    // Compute all pair distances
     for (size_t i = 0; i < particles.size(); ++i) {
         for (size_t j = i + 1; j < particles.size(); ++j) {
             Vec dr = minimumImageConvention(particles[i], particles[j]);
@@ -340,13 +338,12 @@ void ParticleEnsemble::computeRadialDistributionFunctionDirect() {
             if (r < rdfCutoff) {
                 int bin = (int)std::floor(r / rdfBinWidth);
                 if (bin >= 0 && bin < rdfBins) {
-                    rdfHistogram[bin] += 2.0; // Count both i->j and j->i
+                    rdfHistogram[bin] += 2.0; 
                 }
             }
         }
     }
 
-    // Normalize the RDF
     double volume = boxLength * boxLength * boxLength;
     double density = (double)particles.size() / volume;
 
@@ -362,7 +359,7 @@ void ParticleEnsemble::computeRadialDistributionFunctionDirect() {
 void ParticleEnsemble::buildCells(std::vector<Cell> &cells, int &numCellsPerDim, double &cellSize) const {
     cellSize = rdfCutoff; 
     numCellsPerDim = (int)std::floor(boxLength / cellSize);
-    if (numCellsPerDim < 1) numCellsPerDim = 1; // Fallback
+    if (numCellsPerDim < 1) numCellsPerDim = 1; 
 
     cells.clear();
     cells.resize(numCellsPerDim * numCellsPerDim * numCellsPerDim);
@@ -374,7 +371,6 @@ void ParticleEnsemble::buildCells(std::vector<Cell> &cells, int &numCellsPerDim,
         int cy = (int)std::floor(pos.getY() / cellSize);
         int cz = (int)std::floor(pos.getZ() / cellSize);
 
-        // Adjust for periodic boundaries if needed
         if (cx == numCellsPerDim) cx = numCellsPerDim - 1;
         if (cy == numCellsPerDim) cy = numCellsPerDim - 1;
         if (cz == numCellsPerDim) cz = numCellsPerDim - 1;
@@ -385,13 +381,11 @@ void ParticleEnsemble::buildCells(std::vector<Cell> &cells, int &numCellsPerDim,
 }
 
 void ParticleEnsemble::computeRadialDistributionFunctionCellMethod() {
-    // Recalculate cutoff and bin width to adapt to the new box size
     rdfCutoff = boxLength / 2.0;
     rdfBinWidth = rdfCutoff / rdfBins;
 
     resetRDFHistogram();
 
-    // Build cell list
     std::vector<Cell> cells;
     int numCellsPerDim;
     double cellSize;
@@ -416,7 +410,6 @@ void ParticleEnsemble::computeRadialDistributionFunctionCellMethod() {
                             const std::vector<int> &nParticles = cells[neighborCellIndex].particleIndices;
 
                             if (neighborCellIndex == cellIndex) {
-                                // Same cell: avoid double counting pairs
                                 for (size_t i = 0; i < cParticles.size(); ++i) {
                                     for (size_t j = i + 1; j < cParticles.size(); ++j) {
                                         Vec dr = minimumImageConvention(particles[cParticles[i]], particles[cParticles[j]]);
