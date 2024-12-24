@@ -186,13 +186,13 @@ def plot_rdf(r_values, rdfs, steps, final_rdf, temperatures, pressures, pepp, po
     writer = TqdmPillowWriter(fps=10, total_frames=len(selected_steps))  # Adjusted fps to 10 to match interval=100ms
 
     # Save the animation
-    ani.save('rdf_evolution.gif', writer=writer)
+    #ani.save('rdf_evolution.gif', writer=writer)
     plt.show()
 
 # Main script
 if __name__ == "__main__":
     # Default skipsteps value
-    default_skipsteps = 100
+    default_skipsteps = 1
 
     # Parse skipsteps from command-line arguments if provided
     if len(sys.argv) > 1:

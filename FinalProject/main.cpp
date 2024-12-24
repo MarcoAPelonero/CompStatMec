@@ -17,17 +17,17 @@ MolecularDynamicsSimulation::IntegrationMethod parseMethod(const std::string& me
 
 int main(int argc, char* argv[]) {
     // Default parameters
-    int N = 800;
+    int N = 300;
     double rho = 0.6;
     double T = 1.0;
-    double p = 1.011;
-    double dt = 0.008;
-    int numSteps = 3000;
+    double p = 1;
+    double dt = 0.005;
+    int numSteps = 1000;
     std::string fileName = "trajectory.dat";
     std::string rdfName = "radialDistribution.dat";
     double taup = 1;
 
-    MolecularDynamicsSimulation::IntegrationMethod method = MolecularDynamicsSimulation::IntegrationMethod::ThermoEulerCromer;
+    MolecularDynamicsSimulation::IntegrationMethod method = MolecularDynamicsSimulation::IntegrationMethod::RDFSpeedVerlet;
 
     // Override with command-line arguments if provided
     if (argc > 1) N = std::atoi(argv[1]);

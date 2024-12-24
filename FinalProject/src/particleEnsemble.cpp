@@ -14,7 +14,7 @@ ParticleEnsemble::ParticleEnsemble(int N, double L)
       totalPotentialEnergy(0.0),
       forceCalculator(),
       thermodynamics(),
-      rdfCalculator(L / 2.0, 1000),
+      rdfCalculator(1000, L/2),
       boundaryConditions(L)
 {
     initializeParticles();

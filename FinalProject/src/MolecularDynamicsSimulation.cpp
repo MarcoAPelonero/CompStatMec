@@ -174,12 +174,13 @@ void MolecularDynamicsSimulation::runRDFSpeedVerlet(std::ofstream &trajectoryFil
     ensemble.ensembleSnapshot(trajectoryFile);
 
     for (int i = 0; i < totalSteps; ++i) {
+        ensemble.ensembleThermalize(temperature, timeStep, taup);
         ensemble.ensembleStepSpeedVerlet(timeStep);
-
         ensemble.computeRadialDistributionFunctionDirect();
         rdfFile << "# Step " << i << "\n";
+        ensemble.computeThermodynamicsFromRDF(rdfFile);
         ensemble.printRadialDistributionFunction(rdfFile);
-        ensemble.ensembleSnapshot(trajectoryFile);
+        // ensemble.ensembleSnapshot(trajectoryFile);
         progressBar.update(i);
     }
     progressBar.finish();
