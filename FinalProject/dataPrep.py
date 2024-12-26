@@ -342,8 +342,8 @@ def process_rdf_data(output_dir, dataset_dir):
 
 def main():
     # Define the ranges for rho and T
-    rho_values = [0.3,0.4,0.5,0.6, 0.7, 0.8,0.9]  
-    T_values = [1.0, 1.2, 1.4,1.6,1.8,2.0]  
+    rho_values = [0.2,0.3,0.4,0.5,0.6, 0.7, 0.8,0.9]  
+    T_values = [2.2,2.4,2.6,2.8,3.0,4.0,5.0,8.0,1.0]  
     
     # Path to the simulation executable
     simulation_executable = Path('./build/main.exe')  # Adjust as needed
@@ -361,7 +361,7 @@ def main():
     total_simulations = len(rho_values) * len(T_values)
 
     # Use ProcessPoolExecutor for parallel execution
-    with concurrent.futures.ProcessPoolExecutor() as executor:
+    with concurrent.futures.ProcessPoolExecutor(max_workers = 5) as executor:
         futures = [
             executor.submit(run_simulation, rho, T, str(simulation_executable), str(output_dir))
             for rho, T in itertools.product(rho_values, T_values)
