@@ -156,7 +156,7 @@ def visualize_combined(data, N_particles, L_values):
         ax_energy.set_xlim(0, len(avg_potential))
         ax_energy.set_ylim(min(min(avg_potential), min(avg_kinetic), min(avg_mechanical)), max(max(avg_potential), max(avg_kinetic), max(avg_mechanical)) * 1.1)
 
-    ani = FuncAnimation(fig, update, frames=steps, interval=20)
+    ani = FuncAnimation(fig, update, frames=steps, interval=8)
     plt.show()
 
 # Main script

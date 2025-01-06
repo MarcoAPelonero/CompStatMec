@@ -22,12 +22,12 @@ int main(int argc, char* argv[]) {
     double T = 1.0;
     double p = 1;
     double dt = 0.005;
-    int numSteps = 1000;
+    int numSteps = 2000;
     std::string fileName = "trajectory.dat";
     std::string rdfName = "radialDistribution.dat";
     double taup = 1;
 
-    MolecularDynamicsSimulation::IntegrationMethod method = MolecularDynamicsSimulation::IntegrationMethod::RDFSpeedVerlet;
+    MolecularDynamicsSimulation::IntegrationMethod method = MolecularDynamicsSimulation::IntegrationMethod::ThermoSpeedVerlet;
 
     // Override with command-line arguments if provided
     if (argc > 1) N = std::atoi(argv[1]);
