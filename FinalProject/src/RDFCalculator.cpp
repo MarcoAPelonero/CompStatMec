@@ -94,7 +94,6 @@ void RDFCalculator::computeThermodynamics(std::ofstream &file, int numParticles,
     file << temperature << " " << energy_per_particle << " " << total_potential_energy << " " << p << "\n";
 }
 
-// Print RDF to File
 void RDFCalculator::print(std::ofstream &file) const {
     for(int i = 0; i < rdfBins; ++i) {
         double r = (i + 0.5) * rdfBinWidth;
