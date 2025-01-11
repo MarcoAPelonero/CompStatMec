@@ -1,5 +1,3 @@
-# rdf_density_model.py
-
 import numpy as np
 import torch
 from torch.utils.data import Dataset
@@ -66,37 +64,27 @@ class RDFDensityMLP(nn.Module):
 
     def __init__(self, rdf_size=1000, hidden_dim=128):
         super().__init__()
-        # 1) RDF branch
         self.rdf_branch = nn.Sequential(
             nn.Linear(rdf_size, hidden_dim),
             nn.ReLU(),
             nn.Linear(hidden_dim, hidden_dim),
             nn.ReLU()
         )
-        # 2) Density branch
-        #   (just a small sub-network; we can keep it smaller or bigger as you wish)
         self.density_branch = nn.Sequential(
             nn.Linear(1, hidden_dim // 2),
             nn.ReLU(),
             nn.Linear(hidden_dim // 2, hidden_dim // 2),
             nn.ReLU()
         )
-        # 3) Merge the two branches
-        #   RDF branch outputs hidden_dim, density branch outputs hidden_dim//2
-        #   so total is hidden_dim + hidden_dim//2
         merged_dim = hidden_dim + (hidden_dim // 2)
         self.merged_head = nn.Sequential(
             nn.Linear(merged_dim, hidden_dim),
             nn.ReLU(),
-            nn.Linear(hidden_dim, 1)  # final energy prediction
+            nn.Linear(hidden_dim, 1)  
         )
 
     def forward(self, x_rdf, x_density):
-        # Forward pass RDF
-        out_rdf = self.rdf_branch(x_rdf)           # shape: [batch, hidden_dim]
-        # Forward pass density
-        out_density = self.density_branch(x_density)  # shape: [batch, hidden_dim//2]
-        # Concat
+        out_rdf = self.rdf_branch(x_rdf) 
+        out_density = self.density_branch(x_density)  
         merged = torch.cat([out_rdf, out_density], dim=1)
-        # Final
         return self.merged_head(merged)

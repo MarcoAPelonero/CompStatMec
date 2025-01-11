@@ -150,28 +150,13 @@ double ParticleEnsemble::computeEnergyPerParticleFromRDF() {
 }
 
 double ParticleEnsemble::computeThermodynamicsFromML() {
-    // Extract RDF data
-    Eigen::RowVectorXf rdf_data = rdfCalculator.getHistogramAsEigenVector(); // Corrected call
-
-    // Prepare density input
-    // Assuming density = N / V, where V = boxLength^3 for a cubic box
+    Eigen::RowVectorXf rdf_data = rdfCalculator.getHistogramAsEigenVector(); 
     double volume = std::pow(boxLength, 3);
     double density = static_cast<double>(numParticles) / volume;
     Eigen::RowVectorXf density_input(RDFDensityModel::DENSITY_DIM);
-    density_input << static_cast<float>(density); // Cast to float if necessary
+    density_input << static_cast<float>(density); 
 
-    // Perform ML prediction
     float predicted_energy = mlModel.predict_energy(rdf_data, density_input);
-
-    // Update thermodynamic properties based on ML prediction;
-    // Optionally, update other energies if the ML model provides them
-    // For example:
-    // totalKineticEnergy = ...;
-    // totalPotentialEnergy = ...;
-    // totalVirialEnergy = ...;
-
-    // Log or output the predicted energy as needed
-    // std::cout << "ML Predicted Total Energy: " << totalEnergy << std::endl;
     return predicted_energy;
 }
 
@@ -184,28 +169,22 @@ void ParticleEnsemble::printRadialDistributionFunction(std::ofstream &file) {
 using json = nlohmann::json;
 
 std::pair<double, double> ParticleEnsemble::computeThermodynamicsFromPythonML() {
-    // 1. Extract RDF data (ensure it has exactly 1000 elements)
     Eigen::RowVectorXf rdf_data = rdfCalculator.getHistogramAsEigenVector();
     
-    // 2. Calculate density
     double volume = std::pow(boxLength, 3);
     double density = static_cast<double>(numParticles) / volume;
     
-    // 3. Create JSON input
     json input_json;
     input_json["rdf"] = std::vector<float>(rdf_data.data(), rdf_data.data() + rdf_data.size());
     input_json["density"] = static_cast<float>(density);
     std::string input_str = input_json.dump();
     
-    // 4. Define paths (use absolute paths if necessary)
-    std::string python_script = "scripts/predict_energy.py"; // Update if using absolute path
-    std::string model_path = "layers/best_model.pth";        // Update if using absolute path
-    
-    // 5. Temporary file names
+    std::string python_script = "scripts/predict_energy.py"; 
+    std::string model_path = "layers/best_model.pth";    
+
     std::string temp_input_file = "temp_input.json";
     std::string temp_output_file = "temp_output.txt";
     
-    // 6. Write JSON to temp_input.json
     std::ofstream input_file(temp_input_file);
     if (!input_file) {
         std::cerr << "Error: Could not open " << temp_input_file << " for writing." << std::endl;
@@ -214,7 +193,6 @@ std::pair<double, double> ParticleEnsemble::computeThermodynamicsFromPythonML() 
     input_file << input_str;
     input_file.close();
     
-    // 7. Construct and execute the command
     std::string command = "python " + python_script + " " + model_path + " < " + temp_input_file + " > " + temp_output_file;
     int ret = system(command.c_str());
     if (ret != 0) {
@@ -224,7 +202,6 @@ std::pair<double, double> ParticleEnsemble::computeThermodynamicsFromPythonML() 
         return std::make_pair(-1.0,-1.0);
     }
     
-    // 8. Read predicted energy from temp_output.txt
     std::ifstream output_file(temp_output_file);
     if (!output_file) {
         std::cerr << "Error: Could not open " << temp_output_file << " for reading." << std::endl;
@@ -244,13 +221,10 @@ std::pair<double, double> ParticleEnsemble::computeThermodynamicsFromPythonML() 
     }
     output_file.close();
     
-    // 9. Update thermodynamic properties
     totalEnergy = static_cast<double>(predicted_energy);
     
-    // 10. Clean up temporary files
     remove(temp_input_file.c_str());
     remove(temp_output_file.c_str());
     
-    // Return energy and timing
     return std::make_pair(totalEnergy, inference_time);
 }

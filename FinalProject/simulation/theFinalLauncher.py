@@ -47,7 +47,7 @@ def run_simulation(rho, T, simulation_executable, output_folder, N=300, dt=0.005
         return (rho, T, False, e.stderr.decode())
 
 def main():
-    simulation_executable = Path('./build/main.exe')  # Update the path if necessary
+    simulation_executable = Path('./build/main.exe')  
     if not simulation_executable.exists():
         print(f"Simulation executable not found at {simulation_executable}")
         return
@@ -55,9 +55,8 @@ def main():
     ml_comparisons_folder = Path('mlcomparisons')
     ml_comparisons_folder.mkdir(exist_ok=True)
     
-    # Define ranges for rho and T
-    rho_values = [0.2, 0.9]  # Example values, update as needed
-    T_values = [0.7, 2.0]    # Example values, update as needed
+    rho_values = [0.2, 0.9]  
+    T_values = [0.7, 2.0]    
     
     parameter_grid = list(product(rho_values, T_values))
     

@@ -211,19 +211,19 @@ void MolecularDynamicsSimulation::runMLSpeedVerlet(std::ofstream &mlFile) {
         ensemble.ensembleStepSpeedVerlet(timeStep);
         ensemble.computeRadialDistributionFunctionDirect();
 
-        // 1) Compute thermodynamics from RDF
+        // Compute PEP from RDF
         auto startRdf = std::chrono::high_resolution_clock::now();
         double rdfEnergy = ensemble.computeEnergyPerParticleFromRDF();
         auto endRdf = std::chrono::high_resolution_clock::now();
         double rdfTime = std::chrono::duration<double>(endRdf - startRdf).count();
 
-        // 2) Compute thermodynamics from ML
+        // Compute PEP from ML
         auto startML = std::chrono::high_resolution_clock::now();
         double mlEnergy = ensemble.computeThermodynamicsFromML();
         auto endML = std::chrono::high_resolution_clock::now();
         double mlTime = std::chrono::duration<double>(endML - startML).count();
 
-        // 3) Compute thermodynamics from Python ML
+        // Compute PEP from Python ML
         auto startPyML = std::chrono::high_resolution_clock::now();
         auto [pyEnergy, pyTimeReported] = ensemble.computeThermodynamicsFromPythonML();
         auto endPyML = std::chrono::high_resolution_clock::now();
@@ -234,7 +234,6 @@ void MolecularDynamicsSimulation::runMLSpeedVerlet(std::ofstream &mlFile) {
             return;
         }
 
-        // Write timing and energy values to mlFile
         mlFile << rdfTime << " " << rdfEnergy << " "
                << mlTime << " " << mlEnergy << " "
                << pyTimeReported << " " << pyEnergy << std::endl;

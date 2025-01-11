@@ -150,7 +150,7 @@ def main():
     rdf_size = max_len  
     hidden_dim = 128
     lr = 1e-3
-    epochs = 50
+    epochs = 80
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}\n")
@@ -228,12 +228,6 @@ def main():
     plt.show()
 
     if overall_best_model is not None:
-        #torch.save(overall_best_model.state_dict(), "best_model.pth")
-        print("\nBest model saved to best_model.pth")
-    else:
-        print("\nNo models were trained successfully.")
-
-    if overall_best_model is not None:
         overall_best_model.eval()
         test_loss = 0.0
         test_rmse_val = 0.0
@@ -254,6 +248,60 @@ def main():
     else:
         print("Skipping test evaluation as no valid model was trained.")
 
+    if overall_best_model is not None:
+        overall_best_model.eval()
+        train_loss = 0.0
+        train_rmse_val = 0.0
+        with torch.no_grad():
+            for X_rdf_train, X_dens_train, y_train in train_loader:
+                X_rdf_train = X_rdf_train.to(device, dtype=torch.float)
+                X_dens_train = X_dens_train.to(device, dtype=torch.float)
+                y_train = y_train.to(device, dtype=torch.float)
+
+                y_pred_train = overall_best_model(X_rdf_train, X_dens_train)
+                loss = criterion(y_pred_train, y_train).item()
+                train_loss += loss * X_rdf_train.size(0)
+                train_rmse_val += rmse(y_pred_train, y_train).item() * X_rdf_train.size(0)
+
+        train_loss /= len(train_loader.dataset)
+        train_rmse_val /= len(train_loader.dataset)
+
+        val_loss = 0.0
+        val_rmse_val = 0.0
+        with torch.no_grad():
+            for X_rdf_val, X_dens_val, y_val in val_loader:
+                X_rdf_val = X_rdf_val.to(device, dtype=torch.float)
+                X_dens_val = X_dens_val.to(device, dtype=torch.float)
+                y_val = y_val.to(device, dtype=torch.float)
+
+                y_pred_val = overall_best_model(X_rdf_val, X_dens_val)
+                loss = criterion(y_pred_val, y_val).item()
+                val_loss += loss * X_rdf_val.size(0)
+                val_rmse_val += rmse(y_pred_val, y_val).item() * X_rdf_val.size(0)
+
+        val_loss /= len(val_loader.dataset)
+        val_rmse_val /= len(val_loader.dataset)
+
+        # Print LaTeX Table
+        table = f"""
+                \\begin{{table}}[h!]
+                    \\centering
+                    \\caption{{Comparison of Metrics for the Best Model}}
+                    \\label{{tab:metric_comparison}}
+                    \\begin{{tabular}}{{lcc}}
+                        \\toprule
+                        \\textbf{{Dataset}} & \\textbf{{MSE}} & \\textbf{{RMSE}} \\\\
+                        \\midrule
+                        Train & {train_loss:.4f} & {train_rmse_val:.4f} \\\\
+                        Validation & {val_loss:.4f} & {val_rmse_val:.4f} \\\\
+                        Test & {test_loss:.4f} & {test_rmse_val:.4f} \\\\
+                        \\bottomrule
+                    \\end{{tabular}}
+                \\end{{table}}
+                """
+        print(table)
+    else:
+        print("No metrics to display as no valid model was trained.")
 
 if __name__ == "__main__":
     main()

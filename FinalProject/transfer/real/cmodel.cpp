@@ -1,5 +1,3 @@
-// rdf_density_model.cpp
-
 #include <eigen3/Eigen/Dense>
 #include <iostream>
 #include <string>
@@ -60,15 +58,13 @@ Eigen::RowVectorXf relu(const Eigen::RowVectorXf& inputRow) {
     return inputRow.cwiseMax(0.0f);
 }
 
-// Define model dimensions
 const int RDF_SIZE = 1000;
 const int HIDDEN_DIM = 128;
 const int DENSITY_DIM = 1;
-const int DENSITY_HIDDEN_DIM = HIDDEN_DIM / 2; // 64
-const int MERGED_DIM = HIDDEN_DIM + DENSITY_HIDDEN_DIM; // 192
+const int DENSITY_HIDDEN_DIM = HIDDEN_DIM / 2; 
+const int MERGED_DIM = HIDDEN_DIM + DENSITY_HIDDEN_DIM; 
 const int OUTPUT_DIM = 1;
 
-// Weight and bias matrices (using float)
 Eigen::MatrixXf rdf_branch_0_weight;    // (128, 1000)
 Eigen::VectorXf rdf_branch_0_bias;      // (128)
 
@@ -95,7 +91,6 @@ Eigen::VectorXf merged_head_2_bias;     // (1)
 void load_weights(const std::string& folder_path) {
     std::cout << "Loading weights and biases from '" << folder_path << "' directory...\n";
 
-    // RDF Branch
     rdf_branch_0_weight = loadCSV(folder_path + "/rdf_branch.0_weight.csv", 128, 1000);
     Eigen::MatrixXf temp_bias = loadCSV(folder_path + "/rdf_branch.0_bias.csv", 1, 128);
     rdf_branch_0_bias = temp_bias.row(0).transpose(); // (128)
@@ -132,15 +127,13 @@ void load_weights(const std::string& folder_path) {
  * @return Eigen::RowVectorXf Output after RDF branch (1 x 128).
  */
 Eigen::RowVectorXf forward_rdf(const Eigen::RowVectorXf& x_rdf) {
-    // Layer 0: Linear + ReLU
     Eigen::RowVectorXf out = (x_rdf * rdf_branch_0_weight.transpose()) + rdf_branch_0_bias.transpose();
-    out = relu(out); // (1 x 128)
+    out = relu(out); 
 
-    // Layer 2: Linear + ReLU
     out = (out * rdf_branch_2_weight.transpose()) + rdf_branch_2_bias.transpose();
-    out = relu(out); // (1 x 128)
+    out = relu(out); 
 
-    return out; // (1 x 128)
+    return out; 
 }
 
 /**
