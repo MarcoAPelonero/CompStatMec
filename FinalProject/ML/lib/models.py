@@ -36,15 +36,12 @@ class RDFDensityDataset(Dataset):
         X_density_list = []
         y_list = []
         for sample in self.samples:
-            # pad the RDF
             rdf_fixed = self._pad_rdf(sample.rdf)
             X_rdf_list.append(rdf_fixed)
-            # density is just a single float
             X_density_list.append(sample.rho)
-            # energy is the target
             y_list.append(sample.energy)
 
-        X_rdf_array = np.array(X_rdf_list, dtype=np.float32)     # shape: [N, max_len]
+        X_rdf_array = np.array(X_rdf_list, dtype=np.float32)    
         X_density_array = np.array(X_density_list, dtype=np.float32).reshape(-1, 1) 
         y_array = np.array(y_list, dtype=np.float32).reshape(-1, 1)
         return X_rdf_array, X_density_array, y_array
@@ -53,10 +50,9 @@ class RDFDensityDataset(Dataset):
         return len(self.samples)
 
     def __getitem__(self, idx):
-        # Return (RDF, density) as separate items, plus the target
-        rdf = torch.from_numpy(self.X_rdf[idx])         # shape: [max_len]
-        density = torch.from_numpy(self.X_density[idx]) # shape: [1]
-        y = torch.from_numpy(self.y[idx])               # shape: [1]
+        rdf = torch.from_numpy(self.X_rdf[idx])         
+        density = torch.from_numpy(self.X_density[idx]) 
+        y = torch.from_numpy(self.y[idx])               
         return (rdf, density, y)
 
 

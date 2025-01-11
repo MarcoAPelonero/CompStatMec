@@ -4,7 +4,7 @@ from pathlib import Path
 import statistics
 
 # Define simulation parameters
-methods = ["Euler", "EulerCromer", "SpeedVerlet", "ThermoSpeedVerlet"]
+methods = ["RDFSpeedVerlet"]
 step_counts = [1000, 5000, 10000]
 N = 100
 dt = 0.005

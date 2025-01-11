@@ -1,5 +1,3 @@
-# train_multiple_mlp.py
-
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -32,12 +30,10 @@ def pick_best_model(trained_models, df_results):
     Returns:
         nn.Module: The best-performing model.
     """
-    # Find the best validation loss for each model
     best_val_loss_per_model = df_results.groupby('model_id')['val_loss'].min()
 
-    # Identify the model with the lowest validation loss
     best_model_id = best_val_loss_per_model.idxmin()
-    best_model_index = best_model_id - 1  # model_id is 1-based
+    best_model_index = best_model_id - 1  
     best_model = trained_models[best_model_index]
 
     return best_model
@@ -49,7 +45,7 @@ def train_one_model(model_idx,
                     val_loader,
                     epochs,
                     optimizer,
-                    scheduler,  # Added scheduler parameter
+                    scheduler,  
                     criterion,
                     device,
                     main_bar=None):
@@ -58,13 +54,12 @@ def train_one_model(model_idx,
     Use a sub-tqdm bar for this model's epochs.
     After training finishes, that bar is closed and we optionally update the main bar.
     """
-    epoch_logs = []  # store (epoch, train_loss, train_rmse, val_loss, val_rmse)
+    epoch_logs = []  
 
     with tqdm(total=epochs, desc=f"Training Model {model_idx+1}", leave=False) as pbar:
-        best_val_loss = float('inf')  # Initialize best validation loss for this model
+        best_val_loss = float('inf') 
 
         for epoch in range(epochs):
-            # ---- TRAIN ----
             model.train()
             running_loss = 0.0
             running_rmse = 0.0
@@ -86,7 +81,6 @@ def train_one_model(model_idx,
             epoch_train_loss = running_loss / len(train_loader.dataset)
             epoch_train_rmse = running_rmse / len(train_loader.dataset)
 
-            # ---- VALIDATION ----
             model.eval()
             running_val_loss = 0.0
             running_val_rmse = 0.0
@@ -106,16 +100,13 @@ def train_one_model(model_idx,
             epoch_val_loss = running_val_loss / len(val_loader.dataset)
             epoch_val_rmse = running_val_rmse / len(val_loader.dataset)
 
-            # Update best validation loss if current epoch is better
             if epoch_val_loss < best_val_loss:
                 best_val_loss = epoch_val_loss
                 best_model_state = model.state_dict()
 
-            # Step the scheduler every 10 epochs
             if scheduler is not None and (epoch + 1) % 10 == 0:
                 scheduler.step()
 
-            # Log
             epoch_logs.append((
                 epoch+1,
                 epoch_train_loss, epoch_train_rmse,
@@ -128,10 +119,8 @@ def train_one_model(model_idx,
             })
             pbar.update(1)
 
-    # After training, load the best model state
     model.load_state_dict(best_model_state)
 
-    # Done training single model
     if main_bar is not None:
         main_bar.update(1)
 
@@ -139,7 +128,39 @@ def train_one_model(model_idx,
 
 
 def main():
-    # Prompt for number of models
+    dataset_folder = "dataset"
+    data_obj = RDFDatasetLoader(dataset_folder=dataset_folder)
+    data_obj.read_dataset()
+    data_obj.split(train=0.8, vali=0.1, test=0.1, random_state=42)
+
+    print(f"Training samples: {len(data_obj.train)}")
+    print(f"Validation samples: {len(data_obj.vali)}")
+    print(f"Testing samples: {len(data_obj.test)}\n")
+
+    max_len = 1000 
+    train_data = RDFDensityDataset(samples=data_obj.train, max_len=max_len)
+    val_data   = RDFDensityDataset(samples=data_obj.vali, max_len=max_len)
+    test_data  = RDFDensityDataset(samples=data_obj.test, max_len=max_len)
+
+    batch_size = 16
+    train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
+    val_loader   = DataLoader(val_data,   batch_size=batch_size, shuffle=False)
+    test_loader  = DataLoader(test_data,  batch_size=batch_size, shuffle=False)
+
+    rdf_size = max_len  
+    hidden_dim = 128
+    lr = 1e-3
+    epochs = 50
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Using device: {device}\n")
+
+    results_list = []
+    trained_models = []
+
+    overall_best_val_loss = float('inf')
+    overall_best_model = None
+
     try:
         n_models = int(input("Number of models to train: "))
         if n_models < 1:
@@ -149,60 +170,14 @@ def main():
         return
     print(f"Will train {n_models} model(s).")
 
-    # 1) Load entire dataset and ensure it’s shuffled before splitting
-    dataset_folder = "dataset"
-    data_obj = RDFDatasetLoader(dataset_folder=dataset_folder)
-    data_obj.read_dataset()
-    # Shuffle + split
-    data_obj.split(train=0.8, vali=0.1, test=0.1, random_state=42)
-
-    # Verify dataset splits
-    print(f"Training samples: {len(data_obj.train)}")
-    print(f"Validation samples: {len(data_obj.vali)}")
-    print(f"Testing samples: {len(data_obj.test)}\n")
-
-    # 2) Build the specialized RDFDensityDataset
-    max_len = 1000  # typical RDF bin count
-    train_data = RDFDensityDataset(samples=data_obj.train, max_len=max_len)
-    val_data   = RDFDensityDataset(samples=data_obj.vali, max_len=max_len)
-    test_data  = RDFDensityDataset(samples=data_obj.test, max_len=max_len)
-
-    # 3) Create DataLoaders
-    batch_size = 16
-    train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
-    val_loader   = DataLoader(val_data,   batch_size=batch_size, shuffle=False)
-    test_loader  = DataLoader(test_data,  batch_size=batch_size, shuffle=False)
-
-    # 4) Hyperparameters
-    rdf_size = max_len  # size of the RDF input
-    hidden_dim = 128
-    lr = 1e-3
-    epochs = 50
-
-    # 5) Device
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Using device: {device}\n")
-
-    # We'll log results in a list of dicts
-    results_list = []
-    trained_models = []
-
-    # Variables to track the best overall model
-    overall_best_val_loss = float('inf')
-    overall_best_model = None
-
-    # 6) Train n_models in a loop with a main tqdm bar
     with tqdm(total=n_models, desc='Overall Progress', leave=True) as main_bar:
         for m_idx in range(n_models):
-            # Create a fresh model
             model = RDFDensityMLP(rdf_size=rdf_size, hidden_dim=hidden_dim).to(device)
             criterion = nn.MSELoss()
             optimizer = optim.Adam(model.parameters(), lr=lr)
 
-            # Initialize the scheduler
-            scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.9, verbose=False)
+            scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.8, verbose=False)
 
-            # Train one model
             epoch_logs = train_one_model(
                 model_idx=m_idx,
                 model=model,
@@ -210,13 +185,12 @@ def main():
                 val_loader=val_loader,
                 epochs=epochs,
                 optimizer=optimizer,
-                scheduler=scheduler,  # Pass the scheduler to the training function
+                scheduler=scheduler, 
                 criterion=criterion,
                 device=device,
                 main_bar=main_bar
             )
 
-            # Append logs
             for (epoch_id, tr_loss, tr_rmse, va_loss, va_rmse) in epoch_logs:
                 results_list.append({
                     'model_id': m_idx + 1,
@@ -227,29 +201,23 @@ def main():
                     'val_rmse': va_rmse
                 })
 
-            # Check if this model is the best so far
-            min_val_loss = min([log[3] for log in epoch_logs])  # val_loss is the 4th element
+            min_val_loss = min([log[3] for log in epoch_logs]) 
             if min_val_loss < overall_best_val_loss:
                 overall_best_val_loss = min_val_loss
                 overall_best_model = model
 
-            # Optionally, append to trained_models if needed later
             trained_models.append(model)
 
-    # 7) Convert logs to DataFrame
     df_results = pd.DataFrame(results_list)
 
-    # 8) Plot with Seaborn (unchanged from original)
     sns.set(style="whitegrid")
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
 
-    # Plot train loss vs epoch
     sns.lineplot(data=df_results, x='epoch', y='train_loss', hue='model_id', ax=axes[0])
     axes[0].set_title("Train Loss vs. Epoch")
     axes[0].set_xlabel("Epoch")
     axes[0].set_ylabel("Train MSE Loss")
 
-    # Plot val loss vs epoch
     sns.lineplot(data=df_results, x='epoch', y='val_loss', hue='model_id', ax=axes[1])
     axes[1].set_title("Validation Loss vs. Epoch")
     axes[1].set_xlabel("Epoch")
@@ -259,14 +227,12 @@ def main():
     plt.savefig("training_results_seaborn.png", dpi=150)
     plt.show()
 
-    # 9) Save the Best Model
     if overall_best_model is not None:
-        torch.save(overall_best_model.state_dict(), "best_model.pth")
+        #torch.save(overall_best_model.state_dict(), "best_model.pth")
         print("\nBest model saved to best_model.pth")
     else:
         print("\nNo models were trained successfully.")
 
-    # 10) Evaluate on test set using the Best Model
     if overall_best_model is not None:
         overall_best_model.eval()
         test_loss = 0.0

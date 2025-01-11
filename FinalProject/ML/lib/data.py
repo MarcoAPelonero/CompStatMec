@@ -1,5 +1,3 @@
-# lib/data.py
-
 from pathlib import Path
 from tqdm import tqdm
 import os
@@ -13,6 +11,17 @@ class Sample:
     Represents a single RDF sample with its associated properties.
     """
     def __init__(self, rho, T, pressure, energy, r, rdf):
+        """
+        Initializes a Sample instance with the given parameters.
+
+        Parameters:
+            rho (float): Density of the sample.
+            T (float): Temperature of the sample.
+            pressure (float): Pressure of the sample.
+            energy (float): Potential energy per particle.
+            r (np.ndarray): Array of radial distances.
+            rdf (np.ndarray): Corresponding RDF values.
+        """
         self.rho = rho
         self.T = T
         self.pressure = pressure
@@ -21,6 +30,12 @@ class Sample:
         self.rdf = rdf
 
     def show(self, single=True):
+        """
+        Plots the RDF (g(r)) against the radial distance (r).
+
+        Parameters:
+            single (bool): If True, displays the plot immediately.
+        """
         import matplotlib.pyplot as plt
         plt.plot(self.r, self.rdf, '-')
         if single:
@@ -35,13 +50,26 @@ class RDFFile:
     Handles reading RDF data from a single file, which may contain multiple samples.
     """
     def __init__(self, filename):
+        """
+        Initializes an RDFFile instance with the specified filename.
+
+        Parameters:
+            filename (str): Name of the RDF data file to be processed.
+        """
         self.filename = filename
 
     def parse_filename(self):
         """
         Extracts rho and T values from the filename using regex for robustness.
+
         Expected filename format: rdf_rho_<rho>_T_<T>.dat
         Example: rdf_rho_0.9_T_1.0.dat
+
+        Returns:
+            tuple: A tuple containing rho and T as floats.
+
+        Raises:
+            ValueError: If the filename format is incorrect or conversion to float fails.
         """
         pattern = r'rdf_rho_(?P<rho>[\d\.]+)_T_(?P<T>[\d\.]+)\.dat'
         match = re.match(pattern, self.filename)
@@ -55,6 +83,16 @@ class RDFFile:
         return rho, T
 
     def readFile(self):
+        """
+        Reads and parses the RDF data from the file, extracting multiple Sample instances.
+
+        Returns:
+            list: A list of Sample objects extracted from the file.
+
+        Raises:
+            FileNotFoundError: If the specified file does not exist.
+            ValueError: If the file format is incorrect or no valid RDF data is found.
+        """
         rho, T = self.parse_filename()
 
         filepath = os.path.join(datasetFolder, self.filename)
@@ -70,9 +108,7 @@ class RDFFile:
         total_lines = len(lines)
         while i < total_lines:
             line = lines[i].strip()
-            # Only match lines that start with '# Sample' followed by a number
             if re.match(r'^# Sample\s+\d+', line):
-                # Parse Pressure
                 if i + 1 >= total_lines:
                     raise ValueError(f"Unexpected end of file after '# Sample' at line {i+1} in {self.filename}.")
                 pressure_line = lines[i + 1].strip()
@@ -85,7 +121,6 @@ class RDFFile:
                 except ValueError as e:
                     raise ValueError(f"Invalid Pressure value at line {i+2} in {self.filename}.") from e
 
-                # Parse Potential Energy
                 if i + 2 >= total_lines:
                     raise ValueError(f"Unexpected end of file after Pressure line at line {i+2} in {self.filename}.")
                 energy_line = lines[i + 2].strip()
@@ -98,7 +133,6 @@ class RDFFile:
                 except ValueError as e:
                     raise ValueError(f"Invalid Potential Energy value at line {i+3} in {self.filename}.") from e
 
-                # Expecting header line for r and g(r)
                 if i + 3 >= total_lines:
                     raise ValueError(f"Unexpected end of file after Potential Energy line at line {i+3} in {self.filename}.")
                 header_line = lines[i + 3].strip()
@@ -106,20 +140,17 @@ class RDFFile:
                 if not re.match(header_pattern, header_line):
                     raise ValueError(f"Expected header line for r and g(r) at line {i+4} in {self.filename}. Found: {header_line}")
 
-                i += 4  # Move to the first data line after header
+                i += 4  
 
                 r = []
                 rdf = []
-                # Read data lines until the next sample or end of file
                 while i < total_lines:
                     data_line = lines[i].strip()
                     if re.match(r'^# Sample\s+\d+', data_line):
-                        break  # Next sample starts
+                        break 
                     if not data_line or data_line.startswith('#'):
                         i += 1
-                        continue  # Skip empty or comment lines
-
-                    # Split by any whitespace
+                        continue  
                     parts = re.split(r'\s+', data_line)
                     if len(parts) < 2:
                         print(f"Warning: Skipping invalid line {i+1} in {self.filename}: '{data_line}'")
@@ -148,15 +179,24 @@ class RDFFile:
                 )
                 samples.append(sample)
             else:
-                i += 1  # Move to next line if not a sample header
-
+                i += 1  
         if not samples:
             raise ValueError(f"No samples found in file: {filepath}")
 
         return samples
 
 class Dataset:
+    """
+    Manages a collection of RDF data samples, handling data loading, splitting, and analysis.
+    """
     def __init__(self, dataset_folder, filetype='rdf_rho_*_T_*.dat'):
+        """
+        Initializes a Dataset instance with the specified folder and file pattern.
+
+        Parameters:
+            dataset_folder (str): Path to the dataset directory.
+            filetype (str): Glob pattern to match RDF data files. Defaults to 'rdf_rho_*_T_*.dat'.
+        """
         self.filetype = filetype
         self.dataset_folder = dataset_folder
         self.data = []
@@ -165,6 +205,13 @@ class Dataset:
         self.test = []
 
     def read_dataset(self):
+        """
+        Reads all RDF data files matching the specified pattern from the dataset folder and aggregates the samples.
+
+        Raises:
+            FileNotFoundError: If no files match the specified pattern.
+            ValueError: If no valid RDF data is loaded after processing all files.
+        """
         files = list(Path(self.dataset_folder).glob(self.filetype))
         if not files:
             raise FileNotFoundError(f"No files found with pattern {self.filetype} in {self.dataset_folder}")
@@ -184,6 +231,18 @@ class Dataset:
         self.data = np.array(self.data, dtype=object)
 
     def split(self, train=0.8, vali=0.1, test=0.1, random_state=None):
+        """
+        Splits the dataset into training, validation, and testing subsets based on the provided proportions.
+
+        Parameters:
+            train (float): Proportion of data for training. Defaults to 0.8.
+            vali (float): Proportion of data for validation. Defaults to 0.1.
+            test (float): Proportion of data for testing. Defaults to 0.1.
+            random_state (int): Seed for random number generator to ensure reproducibility.
+
+        Raises:
+            ValueError: If the sum of train, vali, and test does not equal 1.0 or if any proportion is negative.
+        """
         if not np.isclose(train + vali + test, 1.0):
             raise ValueError("Percentages for train, vali, and test must sum to 1.0")
 
@@ -205,6 +264,12 @@ class Dataset:
         print(f"Dataset split into {len(self.train)} training, {len(self.vali)} validation, and {len(self.test)} testing samples.")
 
     def get_statistics(self):
+        """
+        Computes and returns mean values of physical parameters for each data split.
+
+        Returns:
+            dict: Dictionary containing mean statistics for 'train', 'vali', and 'test' splits.
+        """
         def average_param(data, param):
             if len(data) == 0:
                 return float('nan')
@@ -236,6 +301,17 @@ class Dataset:
         return stats
 
     def plot_sample(self, split='train', index=0):
+        """
+        Plots the RDF of a specified sample from a given data split.
+
+        Parameters:
+            split (str): Data split to retrieve the sample from ('train', 'vali', 'test'). Defaults to 'train'.
+            index (int): Index of the sample within the split to plot. Defaults to 0.
+
+        Raises:
+            ValueError: If an invalid split name is provided.
+            IndexError: If the specified index is out of range for the chosen split.
+        """
         split_data = getattr(self, split, None)
         if split_data is None:
             raise ValueError(f"Invalid split name: {split}. Choose from 'train', 'vali', 'test'.")
@@ -247,10 +323,19 @@ class Dataset:
         sample.show(single=True)
 
     def __len__(self):  
+        """
+        Returns the total number of samples in the dataset.
+
+        Returns:
+            int: Number of samples.
+        """
         return len(self.data)
 
 if __name__ == '__main__':
-    # Test RDF reading and plotting with a specific file
+    """
+    Main execution block to test the RDFFile class by reading a specific RDF data file
+    and printing out the properties of each sample.
+    """
     test_filename = 'rdf_rho_0.9_T_1.0.dat'
     rdf_file = RDFFile(test_filename)
     
@@ -262,7 +347,5 @@ if __name__ == '__main__':
             print(f"  T: {sample.T}")
             print(f"  Pressure: {sample.pressure}")
             print(f"  Energy: {sample.energy}")
-            # Uncomment the next line to plot each sample
-            # sample.show(single=True)
     except Exception as e:
         print(f"Error: {e}")

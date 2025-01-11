@@ -59,12 +59,10 @@ def read_rdf_file(file_path):
         for line in tqdm(f, desc=f'Reading RDF file {file_path}'):
             line = line.strip()
             if line.startswith('# Step'):
-                # If we have data from a previous step, store it
                 if current_step_data and current_step is not None:
                     rdfs.append([g for _, g in current_step_data])
                     steps.append(current_step)
 
-                # Parse new step info
                 parts = line.split()
                 if len(parts) < 3:
                     logging.warning(f"Malformed step header in {file_path}: {line}")
@@ -75,7 +73,6 @@ def read_rdf_file(file_path):
                     logging.warning(f"Invalid step number in {file_path}: {parts[2]}")
                     continue
 
-                # Attempt to read temperature/pressure line
                 try:
                     temp_line = next(f).strip()
                 except StopIteration:
@@ -113,18 +110,15 @@ def read_rdf_file(file_path):
                         logging.warning(f"Non-numeric data encountered in {file_path}: {line}")
                         continue
 
-        # Handle the last step in the file
         if current_step_data and current_step is not None:
             rdfs.append([g for _, g in current_step_data])
             steps.append(current_step)
 
-    # If we successfully read some RDF data, extract r_values from the first block
     if rdfs:
         with open(file_path, 'r') as f:
             for line in f:
                 line = line.strip()
                 if line.startswith('# Step'):
-                    # Skip the temperature/pressure line after '# Step ...'
                     try:
                         next(f)
                     except StopIteration:
@@ -149,7 +143,6 @@ def read_rdf_file(file_path):
     else:
         r_values = []
 
-    # Convert to numpy arrays
     rdfs = np.array(rdfs)
     return r_values, rdfs, steps, temperatures, pressures, pepp, potential_energies
 
@@ -180,11 +173,9 @@ def run_simulation(rho, T, simulation_executable, output_dir, dataset_dir):
     rdf_output_file = f'radialDistribution_rho_{rho}_T_{T}.dat'
     rdf_output_path = output_dir / rdf_output_file
 
-    # Unique trajectory and final RDF name
     trajectory_filename = f'trajectory_rho_{rho}_T_{T}.dat'
     trajectory_path = output_dir / trajectory_filename
 
-    # Simulation parameters
     N = '300'
     rho_str = str(rho)
     dt = '0.008'
@@ -211,7 +202,6 @@ def run_simulation(rho, T, simulation_executable, output_dir, dataset_dir):
     ]
     logging.info(f"Executing simulation for rho={rho}, T={T} with command: {' '.join(cmd)}")
 
-    # Run the external simulation
     try:
         subprocess.run(
             cmd,
@@ -225,12 +215,10 @@ def run_simulation(rho, T, simulation_executable, output_dir, dataset_dir):
         logging.error(f"Simulation failed for rho={rho}, T={T}. Error message:\n{e.stderr}")
         return
 
-    # Ensure the RDF file was created
     if not rdf_output_path.exists():
         logging.error(f"RDF output file {rdf_output_path} not found for rho={rho}, T={T}.")
         return
 
-    # Read the RDF data
     try:
         (
             r_values, 
@@ -249,13 +237,11 @@ def run_simulation(rho, T, simulation_executable, output_dir, dataset_dir):
         logging.error(f"No RDF data found in {rdf_output_path} for rho={rho}, T={T}.")
         return
 
-    # Immediately process the data: split into 50% for averaging, 50% for sampling
     total_steps = len(steps)
     if total_steps == 0:
         logging.error(f"No steps found in {rdf_output_path} for rho={rho}, T={T}.")
         return
 
-    # Select 50% of the data for averaging (e.g., every 2nd step)
     selected_indices_avg = np.arange(0, total_steps, 2)
     selected_indices_avg = selected_indices_avg[: total_steps // 2]
     selected_rdfs_avg = rdfs[selected_indices_avg]
@@ -266,7 +252,6 @@ def run_simulation(rho, T, simulation_executable, output_dir, dataset_dir):
     avg_pepp = np.mean(selected_pepp_avg)
     avg_histogram = np.mean(selected_rdfs_avg, axis=0)
 
-    # Save average RDF data
     avg_rdf_filename = f'avg_rdf_rho_{rho}_T_{T}.dat'
     avg_rdf_path = dataset_dir / avg_rdf_filename
     try:
@@ -280,7 +265,6 @@ def run_simulation(rho, T, simulation_executable, output_dir, dataset_dir):
     except Exception as e:
         logging.error(f"Failed to save average RDF data to {avg_rdf_path}. Error: {e}")
 
-    # Remaining steps for sampling
     remaining_indices = np.setdiff1d(np.arange(total_steps), selected_indices_avg)
     if len(remaining_indices) == 0:
         logging.warning(f"No remaining steps after 50% selection in {rdf_output_path}.")
@@ -299,7 +283,6 @@ def run_simulation(rho, T, simulation_executable, output_dir, dataset_dir):
     sampled_pressures = np.array(pressures)[sampled_remaining_indices]
     sampled_pepp = np.array(pepp)[sampled_remaining_indices]
 
-    # Save the sampled RDF data
     rdf_filename = f'rdf_rho_{rho}_T_{T}.dat'
     rdf_path = dataset_dir / rdf_filename
     try:
@@ -323,9 +306,9 @@ def run_simulation(rho, T, simulation_executable, output_dir, dataset_dir):
     # -------------------------------------------------------------------------
     try:
         if rdf_output_path.exists():
-            rdf_output_path.unlink()  # Delete the radialDistribution file
+            rdf_output_path.unlink()  
         if trajectory_path.exists():
-            trajectory_path.unlink()  # Delete the trajectory file
+            trajectory_path.unlink()  
         logging.info(f"Removed raw data files for rho={rho}, T={T}.")
     except Exception as e:
         logging.warning(f"Could not remove raw data files for rho={rho}, T={T}. Error: {e}")
@@ -337,9 +320,9 @@ def main():
     runs all simulations (possibly in parallel), and processes each simulation's
     data immediately after completion. Raw data is removed to save disk space.
     """
-    # Create a grid of rho and T
-    rho_values = np.round(np.linspace(0.1, 0.95, 50), 2)
-    T_values = np.round(np.linspace(0.5, 10, 50), 2)
+    num_examples = 50
+    rho_values = np.round(np.linspace(0.1, 0.95, num_examples), 2)
+    T_values = np.round(np.linspace(0.5, 10, num_examples), 2)
 
     simulation_executable = Path('./build/main.exe')
     if not simulation_executable.exists():
@@ -354,7 +337,6 @@ def main():
     param_grid = list(itertools.product(rho_values, T_values))
     total_simulations = len(param_grid)
 
-    # Run simulations in parallel
     with concurrent.futures.ProcessPoolExecutor(max_workers=5) as executor:
         futures = []
         for rho, T in param_grid:
@@ -368,14 +350,10 @@ def main():
                 )
             )
 
-        # Track the progress
         for _ in tqdm(concurrent.futures.as_completed(futures), total=total_simulations, desc='Running Simulations'):
             pass
 
     logging.info("All simulations completed.")
-
-    # Optionally, remove the now-empty rdfData folder if desired
-    # (If other intermediate files exist, you may want to keep it.)
     try:
         shutil.rmtree(output_dir)
         logging.info(f"Removed RDF data directory: {output_dir}")
