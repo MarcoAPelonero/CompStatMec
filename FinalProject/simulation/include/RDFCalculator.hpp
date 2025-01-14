@@ -24,7 +24,6 @@ public:
     double computeAverageEnergyPerParticle(int numParticles, double boxLength);
     void print(std::ofstream &file) const;
 
-    // ML Inference 
     Eigen::RowVectorXf getHistogramAsEigenVector() const;
 };
 

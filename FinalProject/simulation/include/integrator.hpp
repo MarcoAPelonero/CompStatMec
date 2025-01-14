@@ -7,12 +7,10 @@
 
 #include <vector>
 
-// Abstract Base Class for Integrators
 class Integrator {
 public:
     virtual ~Integrator() = default;
 
-    // Pure virtual method to perform a simulation step
     virtual void step(std::vector<Particle> &particles, 
                       ForceCalculator &forceCalculator,
                       BoundaryConditions &boundaryConditions, 

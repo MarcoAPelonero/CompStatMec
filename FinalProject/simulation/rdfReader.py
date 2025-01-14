@@ -23,7 +23,6 @@ def read_rdf_file(file_path):
                 parts = line.split()
                 current_step = int(parts[2])
                 try:
-                    # Read the next line for temperature, pressure, potential energy
                     temp_line = next(f).strip()
                 except StopIteration:
                     print(f"Unexpected end of file after step {current_step}.")
@@ -45,7 +44,7 @@ def read_rdf_file(file_path):
                 if line:
                     vals = line.split()
                     if len(vals) < 2:
-                        continue  # Skip malformed lines
+                        continue  
                     try:
                         r = float(vals[0])
                         g = float(vals[1])
@@ -53,14 +52,12 @@ def read_rdf_file(file_path):
                     except ValueError:
                         continue  # Skip lines with non-numeric data
 
-        # Handle the last step
         if current_step_data and current_step is not None:
             rdfs.append([g for r, g in current_step_data])
             steps.append(current_step)
 
-    # Extract r_values from the first step for consistency
     if rdfs:
-        r_values = [r for r, g in current_step_data]  # Assuming r is the same across all steps
+        r_values = [r for r, g in current_step_data] 
     else:
         r_values = []
 
@@ -130,19 +127,17 @@ def read_rdf_file2(file_path):
                         logging.warning(f"Non-numeric data encountered in {file_path}: {line}")
                         continue  
 
-        # Handle the last step
         if current_step_data and current_step is not None:
             rdfs.append([g for r, g in current_step_data])
             steps.append(current_step)
 
     if rdfs:
-        # Extract r_values from the first step
         with open(file_path, 'r') as f:
             for line in f:
                 line = line.strip()
                 if line.startswith('# Step'):
                     try:
-                        next(f)  # Skip temperature line
+                        next(f)  
                     except StopIteration:
                         break
                     break

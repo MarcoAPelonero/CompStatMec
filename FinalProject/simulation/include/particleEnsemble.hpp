@@ -22,17 +22,14 @@
 
 class ParticleEnsemble {
 private:
-    // Particle management
     std::vector<Particle> particles;
     int numParticles;
     double boxLength;
     std::mt19937 rng;
     std::normal_distribution<double> gaussian;
 
-    // Energy metrics
     double totalEnergy, totalKineticEnergy, totalVirialEnergy, totalPotentialEnergy;
 
-    // Specialized classes
     ForceCalculator forceCalculator;
     Thermodynamics thermodynamics;
     RDFCalculator rdfCalculator;
@@ -40,13 +37,10 @@ private:
 
     RDFDensityModel mlModel;
 public:
-    // Constructor
     ParticleEnsemble(int N, double L);
 
-    // Initialization
     void initializeParticles();
 
-    // Accessors
     std::vector<Particle>& getParticles();
     const std::vector<Particle>& getParticles() const;
     double getBoxLength() const;
@@ -54,7 +48,6 @@ public:
     double getTotalKineticEnergy() const;
     double getTotalPotentialEnergy() const;
 
-    // Mutators
     void setParticles(const std::vector<Particle> &p);
     void setBoxLength(double l);
     void setTotalEnergy(double e);
@@ -62,22 +55,17 @@ public:
     void setTotalPotentialEnergy(double e);
     void addParticle(const Particle &p);
 
-    // Display
     void showParticles() const;
 
-    // Simulation Controls
     void ensembleThermalize(double temperature, double dt, double tauT = 0.1);
     void ensemblePressurize(double pressure, double dt, double tauP = 0.1);
 
-    // Integration Steps
     void ensembleStepEuler(double dt);
     void ensembleStepEulerCromer(double dt);
     void ensembleStepSpeedVerlet(double dt);
 
-    // Data Output
     void ensembleSnapshot(std::ofstream &file);
 
-    // RDF Computations
     void resetRDFHistogram();
     void computeRadialDistributionFunctionDirect();
     void computeRadialDistributionFunctionOptimized();

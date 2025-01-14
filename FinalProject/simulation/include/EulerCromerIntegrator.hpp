@@ -3,7 +3,6 @@
 
 #include "Integrator.hpp"
 
-// Euler-Cromer Integrator
 class EulerCromerIntegrator : public Integrator {
 public:
     void step(std::vector<Particle> &particles, 
