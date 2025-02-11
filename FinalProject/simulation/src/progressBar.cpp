@@ -46,7 +46,7 @@ void ProgressBar::display() {
     if (currentStep > 0) {
         eta = static_cast<int>(elapsed * (1.0f - progress) / progress);
     } else {
-        eta = -1; // Set to -1 or a specific message to indicate ETA is unknown
+        eta = -1; 
     }
 
     std::cout << "\r" << prefixText << " [";

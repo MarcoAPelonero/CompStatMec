@@ -117,7 +117,6 @@ def plot_rdf(r_values, rdfs, steps, final_rdf, temperatures, pressures, pepp, po
     ax2.set_title('Final and Stabilized RDFs', fontsize=16)
     ax2.legend(fontsize=12)
 
-    # **Corrected Section for ax3**
     ax3 = axes[1, 0]
     avg_g = np.mean(rdfs, axis=0)
     ax3.plot(r_values, avg_g, color='skyblue', lw=2)

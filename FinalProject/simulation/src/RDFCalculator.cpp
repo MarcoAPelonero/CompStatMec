@@ -1,26 +1,22 @@
 #include "RDFCalculator.hpp"
-#include "boundaryConditions.hpp" // For minimum image convention
+#include "boundaryConditions.hpp" 
 #include <cmath>
 #include <algorithm>
 
-// Constructor
 RDFCalculator::RDFCalculator(int bins, double cutoff)
     : rdfBins(bins), rdfCutoff(cutoff), rdfBinWidth(cutoff / bins), rdfHistogram(bins, 0.0)
 {}
 
-// Reset Histogram
 void RDFCalculator::resetHistogram() {
     std::fill(rdfHistogram.begin(), rdfHistogram.end(), 0.0);
 }
 
-// Direct Computation of RDF
 void RDFCalculator::computeDirect(const std::vector<Particle> &particles, double boxLength) {
     resetHistogram();
 
     for(size_t i = 0; i < particles.size(); ++i) {
         for(size_t j = i + 1; j < particles.size(); ++j) {
             Vec dr = particles[i].getPosition() - particles[j].getPosition();
-            // Apply Minimum Image Convention
             double halfBox = boxLength / 2.0;
             if (dr.getX() > halfBox) dr.setX(dr.getX() - boxLength);
             if (dr.getX() < -halfBox) dr.setX(dr.getX() + boxLength);
@@ -33,13 +29,12 @@ void RDFCalculator::computeDirect(const std::vector<Particle> &particles, double
             if(r < rdfCutoff) {
                 int bin = static_cast<int>(std::floor(r / rdfBinWidth));
                 if(bin >=0 && bin < rdfBins) {
-                    rdfHistogram[bin] += 2.0; // Each pair counted twice
+                    rdfHistogram[bin] += 2.0; 
                 }
             }
         }
     }
 
-    // Normalize RDF
     double volume = std::pow(boxLength, 3);
     double density = static_cast<double>(particles.size()) / volume;
 
@@ -52,22 +47,19 @@ void RDFCalculator::computeDirect(const std::vector<Particle> &particles, double
     }
 }
 
-// Optimized RDF Computation using Cell Lists (Implementation Omitted for Brevity)
 void RDFCalculator::computeOptimized(const std::vector<Particle> &particles, double boxLength) {
-    // Implement cell list optimization here
-    // This requires additional structures and is omitted for brevity
+    // NOT IMPLEMENTED YET, ASK DE MICHELE
 }
 
-// Compute Thermodynamic Properties from RDF
 void RDFCalculator::computeThermodynamics(std::ofstream &file, int numParticles, double boxLength) {
-    double temperature = 0.0; // Placeholder: Compute if needed
+    double temperature = 0.0;
     double volume = std::pow(boxLength, 3);
     double density = static_cast<double>(numParticles) / volume;
 
     double dr = rdfBinWidth;
     double energy_per_particle = 0.0;
     double pressure_term = 0.0;
-    double k_B = 1.0; // Boltzmann constant
+    double k_B = 1.0; 
 
     for(int i = 0; i < rdfBins; ++i) {
         double r = (i + 0.5) * dr;

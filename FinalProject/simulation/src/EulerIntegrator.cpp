@@ -6,10 +6,8 @@ void EulerIntegrator::step(std::vector<Particle> &particles,
                            double dt, 
                            double boxLength)
 {
-    // Compute Forces
     forceCalculator.computeForces(particles, boxLength);
 
-    // Update Positions and Velocities
     for(auto &particle : particles) {
         Vec acceleration = particle.getForce() / particle.getMass();
         Vec velocity = particle.getVelocity();
@@ -21,7 +19,6 @@ void EulerIntegrator::step(std::vector<Particle> &particles,
         particle.setPosition(position);
         particle.setVelocity(velocity);
 
-        // Apply Boundary Conditions
         boundaryConditions.apply(particle);
     }
 }

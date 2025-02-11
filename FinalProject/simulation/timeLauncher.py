@@ -9,13 +9,10 @@ step_counts = [1000, 5000, 10000]
 N = 100
 dt = 0.005
 
-# Path to the simulation executable
 simulation_executable = Path('./build/main.exe')
 
-# Dictionary to store execution times
 execution_times = {method: {steps: [] for steps in step_counts} for method in methods}
 
-# Run simulations and record times
 for method in methods:
     for steps in step_counts:
         print(f"Running {method} with {steps} steps...")
@@ -24,7 +21,6 @@ for method in methods:
             print(f"Run {run+1}/5...")
             start_time = time.time()
             
-            # Build command arguments
             cmd = [
                 str(simulation_executable),
                 str(N),
@@ -39,7 +35,6 @@ for method in methods:
                 "1.0"            # taup
             ]
             
-            # Execute the simulation
             subprocess.run(cmd, check=True)
             
             end_time = time.time()
@@ -52,7 +47,6 @@ for method in methods:
         execution_times[method][steps] = (average_time, sigma_time)
         print(f"{method} with {steps} steps: Avg={average_time:.2f}s, σ={sigma_time:.2f}s\n")
 
-# Generate LaTeX table
 latex_table = """
 \\begin{tabular}{lccc}
 \\hline

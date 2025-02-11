@@ -34,7 +34,6 @@ int main(int argc, char* argv[]) {
     std::cout << "Current Working Directory: " << std::filesystem::current_path() << std::endl;
     MolecularDynamicsSimulation::IntegrationMethod method = MolecularDynamicsSimulation::IntegrationMethod::MLSpeedVerlet;
 
-    // Override with command-line arguments if provided
     if (argc > 1) N = std::atoi(argv[1]);
     if (argc > 2) rho = std::atof(argv[2]);
     if (argc > 3) dt = std::atof(argv[3]);

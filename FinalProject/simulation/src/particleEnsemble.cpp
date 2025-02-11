@@ -7,7 +7,7 @@
 ParticleEnsemble::ParticleEnsemble(int N, double L)
     : numParticles(N),
       boxLength(L),
-      rng(42), // Fixed seed for reproducibility
+      rng(42), 
       gaussian(0.0, 1.0),
       totalEnergy(0.0),
       totalKineticEnergy(0.0),
@@ -17,14 +17,12 @@ ParticleEnsemble::ParticleEnsemble(int N, double L)
       thermodynamics(),
       rdfCalculator(1000, L/2),
       boundaryConditions(L),
-      mlModel() // Initialize ML model
+      mlModel() 
 {
     initializeParticles();
-    // Load ML model weights
-    mlModel.load_weights("layers"); // Assuming 'layers' is in the current working directory
+    mlModel.load_weights("layers"); 
 }
 
-// Initialize Particles in a Cubic Lattice with Gaussian Velocities
 void ParticleEnsemble::initializeParticles() {
     int numPerSide = std::ceil(std::cbrt(numParticles));
     double spacing = boxLength / numPerSide;
@@ -42,14 +40,12 @@ void ParticleEnsemble::initializeParticles() {
         }
     }
 
-    // Compute Initial Energies and Forces
     forceCalculator.computePotentials(particles, boxLength);
     thermodynamics.computeKinetics(particles);
     thermodynamics.computeVirial(particles, boxLength, forceCalculator);
     thermodynamics.computeEnergies(totalEnergy, totalKineticEnergy, totalVirialEnergy, totalPotentialEnergy, particles);
 }
 
-// Accessors and Mutators
 std::vector<Particle>& ParticleEnsemble::getParticles() { return particles; }
 const std::vector<Particle>& ParticleEnsemble::getParticles() const { return particles; }
 double ParticleEnsemble::getBoxLength() const { return boxLength; }
@@ -64,7 +60,6 @@ void ParticleEnsemble::setTotalKineticEnergy(double e) { totalKineticEnergy = e;
 void ParticleEnsemble::setTotalPotentialEnergy(double e) { totalPotentialEnergy = e; }
 void ParticleEnsemble::addParticle(const Particle &p) { particles.push_back(p); }
 
-// Display Particle Information
 void ParticleEnsemble::showParticles() const {
     for (size_t i = 0; i < particles.size(); ++i) {
         std::cout << "Particle " << i + 1 << ":\n";
@@ -72,7 +67,6 @@ void ParticleEnsemble::showParticles() const {
     }
 }
 
-// Simulation Control Methods
 void ParticleEnsemble::ensembleThermalize(double targetTemperature, double dt, double tauT) {
     thermodynamics.thermalize(particles, targetTemperature, dt, tauT);
 }
@@ -81,12 +75,10 @@ void ParticleEnsemble::ensemblePressurize(double targetPressure, double dt, doub
     thermodynamics.pressurize(particles, targetPressure, dt, tauP, boxLength, boundaryConditions);
 }
 
-// Integration Steps
 void ParticleEnsemble::ensembleStepEuler(double dt) {
     EulerIntegrator integrator;
     integrator.step(particles, forceCalculator, boundaryConditions, dt, boxLength);
 
-    // Update Energies
     forceCalculator.computePotentials(particles, boxLength);
     thermodynamics.computeKinetics(particles);
     thermodynamics.computeVirial(particles, boxLength, forceCalculator);
@@ -97,7 +89,6 @@ void ParticleEnsemble::ensembleStepEulerCromer(double dt) {
     EulerCromerIntegrator integrator;
     integrator.step(particles, forceCalculator, boundaryConditions, dt, boxLength);
 
-    // Update Energies
     forceCalculator.computePotentials(particles, boxLength);
     thermodynamics.computeKinetics(particles);
     thermodynamics.computeVirial(particles, boxLength, forceCalculator);
@@ -108,14 +99,12 @@ void ParticleEnsemble::ensembleStepSpeedVerlet(double dt) {
     SpeedVerletIntegrator integrator;
     integrator.step(particles, forceCalculator, boundaryConditions, dt, boxLength);
 
-    // Update Energies
     forceCalculator.computePotentials(particles, boxLength);
     thermodynamics.computeKinetics(particles);
     thermodynamics.computeVirial(particles, boxLength, forceCalculator);
     thermodynamics.computeEnergies(totalEnergy, totalKineticEnergy, totalVirialEnergy, totalPotentialEnergy, particles);
 }
 
-// Data Output
 void ParticleEnsemble::ensembleSnapshot(std::ofstream &file) {
     file << boxLength << "\n";
     for (const auto &particle : particles) {
@@ -125,10 +114,9 @@ void ParticleEnsemble::ensembleSnapshot(std::ofstream &file) {
              << particle.getKineticEnergy() << " "
              << particle.getTotalEnergy() << "\n";
     }
-    file << "\n"; // Separator for snapshots
+    file << "\n"; 
 }
 
-// RDF Computations
 void ParticleEnsemble::resetRDFHistogram() {
     rdfCalculator.resetHistogram();
 }

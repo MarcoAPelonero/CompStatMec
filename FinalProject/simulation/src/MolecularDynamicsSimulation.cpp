@@ -9,7 +9,6 @@ void MolecularDynamicsSimulation::run() {
     } 
     
     std::ofstream rdfFile;
-    // Print the name of the RDF file 
     std::cout << "RDF file: " << outputRDFFileName << std::endl;
     if (outputRDFFileName != "") {
         
@@ -167,7 +166,7 @@ void MolecularDynamicsSimulation::runRDFEulerCromer(std::ofstream &trajectoryFil
     ProgressBar progressBar(totalSteps);
     ensemble.ensembleSnapshot(trajectoryFile);
 
-    auto start_time = std::chrono::high_resolution_clock::now(); // Start timing
+    auto start_time = std::chrono::high_resolution_clock::now(); 
 
     for (int i = 0; i < totalSteps; ++i) {
         ensemble.ensembleThermalize(temperature, timeStep, taup);
@@ -181,14 +180,14 @@ void MolecularDynamicsSimulation::runRDFEulerCromer(std::ofstream &trajectoryFil
     }
     progressBar.finish();
 
-    auto end_time = std::chrono::high_resolution_clock::now(); // End timing
+    auto end_time = std::chrono::high_resolution_clock::now(); 
     std::chrono::duration<double> elapsed = end_time - start_time;
     std::cout << "Simulation completed in " << elapsed.count() << " seconds." << std::endl;
 }
 
 void MolecularDynamicsSimulation::runRDFSpeedVerlet(std::ofstream &trajectoryFile, std::ofstream &rdfFile) {
     ProgressBar progressBar(totalSteps);
-    // ensemble.ensembleSnapshot(trajectoryFile);
+    ensemble.ensembleSnapshot(trajectoryFile);
 
     for (int i = 0; i < totalSteps; ++i) {
         ensemble.ensembleThermalize(temperature, timeStep, taup);
@@ -197,7 +196,7 @@ void MolecularDynamicsSimulation::runRDFSpeedVerlet(std::ofstream &trajectoryFil
         rdfFile << "# Step " << i << "\n";
         ensemble.computeThermodynamicsFromRDF(rdfFile);
         ensemble.printRadialDistributionFunction(rdfFile);
-        // ensemble.ensembleSnapshot(trajectoryFile);
+        ensemble.ensembleSnapshot(trajectoryFile);
         progressBar.update(i);
     }
     progressBar.finish();
@@ -211,19 +210,16 @@ void MolecularDynamicsSimulation::runMLSpeedVerlet(std::ofstream &mlFile) {
         ensemble.ensembleStepSpeedVerlet(timeStep);
         ensemble.computeRadialDistributionFunctionDirect();
 
-        // Compute PEP from RDF
         auto startRdf = std::chrono::high_resolution_clock::now();
         double rdfEnergy = ensemble.computeEnergyPerParticleFromRDF();
         auto endRdf = std::chrono::high_resolution_clock::now();
         double rdfTime = std::chrono::duration<double>(endRdf - startRdf).count();
 
-        // Compute PEP from ML
         auto startML = std::chrono::high_resolution_clock::now();
         double mlEnergy = ensemble.computeThermodynamicsFromML();
         auto endML = std::chrono::high_resolution_clock::now();
         double mlTime = std::chrono::duration<double>(endML - startML).count();
 
-        // Compute PEP from Python ML
         auto startPyML = std::chrono::high_resolution_clock::now();
         auto [pyEnergy, pyTimeReported] = ensemble.computeThermodynamicsFromPythonML();
         auto endPyML = std::chrono::high_resolution_clock::now();

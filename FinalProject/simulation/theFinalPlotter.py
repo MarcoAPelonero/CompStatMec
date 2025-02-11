@@ -10,7 +10,6 @@ files = sorted(data_dir.glob("mlUnFairComparison_rho_*_T_*.dat"))
 if len(files) != 4:
     raise ValueError("Expected exactly 4 simulations in 'mlcomparisons/'")
 
-# Purple shades for both time and energy plots
 cols = sns.color_palette("Purples", 3)
 cols = ["#6A0DAD", "#333333", "#00008B"]
 pat = re.compile(r"mlUnFairComparison_rho_(?P<rho>[\d\.e-]+)_T_(?P<T>[\d\.e-]+)\.dat")
@@ -36,13 +35,11 @@ for f in files:
         "E_py":  arr[:, 5],
     })
 
-# Check ML C++ vs ML Python within tolerance
 tol = 1e-6
 ok = all(np.allclose(d["E_cpp"], d["E_py"], atol=tol) for d in all_data)
 print("ML C++ and ML Python energies are within tolerance." if ok 
       else "ML C++ and ML Python differ beyond tolerance.")
 
-# Figure 1: Time evolution (4 subplots)
 fig_t, axs_t = plt.subplots(2, 2, figsize=(12, 8))
 for i, d in enumerate(all_data):
     ax = axs_t.flat[i]
@@ -62,7 +59,6 @@ fig_t.suptitle("Time Evolution (4 Simulations)", y=1.03, fontsize=14)
 fig_t.tight_layout()
 plt.savefig("Time_Evolution_4Simulations.png", dpi=150)
 
-# Figure 2: Energy evolution (4 subplots)
 fig_e, axs_e = plt.subplots(2, 2, figsize=(12, 8))
 for i, d in enumerate(all_data):
     ax = axs_e.flat[i]
@@ -79,9 +75,8 @@ fig_e.legend(handles, labels, loc="upper center", ncol=3)
 fig_e.suptitle("Energy Evolution (4 Simulations)", y=1.03, fontsize=14)
 fig_e.tight_layout()
 plt.savefig("Energy_Evolution_4Simulations.png", dpi=150)
-#plt.show()
+plt.show()
 
-# Averages & table
 mE_ana = np.mean([np.mean(d["E_ana"]) for d in all_data])
 mE_cpp = np.mean([np.mean(d["E_cpp"]) for d in all_data])
 mE_py  = np.mean([np.mean(d["E_py"])  for d in all_data])

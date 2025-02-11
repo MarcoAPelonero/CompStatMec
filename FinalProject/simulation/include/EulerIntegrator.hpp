@@ -3,7 +3,6 @@
 
 #include "Integrator.hpp"
 
-// Euler Integrator
 class EulerIntegrator : public Integrator {
 public:
     void step(std::vector<Particle> &particles, 

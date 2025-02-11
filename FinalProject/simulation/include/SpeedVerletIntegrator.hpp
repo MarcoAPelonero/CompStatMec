@@ -3,7 +3,6 @@
 
 #include "Integrator.hpp"
 
-// Velocity Verlet Integrator
 class SpeedVerletIntegrator : public Integrator {
 public:
     void step(std::vector<Particle> &particles, 

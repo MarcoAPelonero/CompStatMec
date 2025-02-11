@@ -282,7 +282,6 @@ def main():
         val_loss /= len(val_loader.dataset)
         val_rmse_val /= len(val_loader.dataset)
 
-        # Print LaTeX Table
         table = f"""
                 \\begin{{table}}[h!]
                     \\centering

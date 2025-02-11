@@ -1,25 +1,20 @@
 #include "thermodynamics.hpp"
 #include <cmath>
 
-// Compute Kinetic Energy for All Particles
 void Thermodynamics::computeKinetics(std::vector<Particle> &particles) {
     for(auto &p : particles) {
         p.computeKineticEnergy();
     }
 }
 
-// Compute Virial from Forces
 void Thermodynamics::computeVirial(std::vector<Particle> &particles, double boxLenght, ForceCalculator &forceCalculator) {
-    // Reset virial energies
     for(auto &p : particles) {
         p.setVirialEnergy(0.0);
     }
 
-    // Assuming ForceCalculator has a method to compute virial
     forceCalculator.computeVirial(particles, boxLenght);
 }
 
-// Compute Total Energies
 void Thermodynamics::computeEnergies(double &totalEnergy, double &totalKineticEnergy, 
                                      double &totalVirialEnergy, double &totalPotentialEnergy, 
                                      std::vector<Particle> &particles)
@@ -38,7 +33,6 @@ void Thermodynamics::computeEnergies(double &totalEnergy, double &totalKineticEn
     }
 }
 
-// Thermalize Ensemble to Target Temperature
 void Thermodynamics::thermalize(std::vector<Particle> &particles, double targetTemperature, double dt, double tauT) {
     double currentTemperature = 0.0;
     for(const auto &p : particles) {
@@ -54,11 +48,9 @@ void Thermodynamics::thermalize(std::vector<Particle> &particles, double targetT
         p.setVelocity(velocity);
     }
 
-    // Recompute Kinetic Energies
     computeKinetics(particles);
 }
 
-// Pressurize Ensemble to Target Pressure
 void Thermodynamics::pressurize(std::vector<Particle> &particles, double targetPressure, double dt, double tauP, 
                                  double &boxLength, BoundaryConditions &boundaryConditions) 
 {
@@ -73,7 +65,6 @@ void Thermodynamics::pressurize(std::vector<Particle> &particles, double targetP
 
     double lambda = 1.0 - (dt / tauP) * (targetPressure - currentPressure);
 
-    // Clamp lambda to prevent excessive scaling
     const double lambda_min = 0.9;
     const double lambda_max = 1.1;
     lambda = std::max(lambda_min, std::min(lambda_max, lambda));

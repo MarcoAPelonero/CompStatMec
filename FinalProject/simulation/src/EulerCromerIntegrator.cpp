@@ -6,10 +6,8 @@ void EulerCromerIntegrator::step(std::vector<Particle> &particles,
                                   double dt, 
                                   double boxLength)
 {
-    // Compute Forces
     forceCalculator.computeForces(particles, boxLength);
 
-    // Update Velocities and Positions
     for(auto &particle : particles) {
         Vec acceleration = particle.getForce() / particle.getMass();
         Vec velocity = particle.getVelocity();
@@ -21,7 +19,6 @@ void EulerCromerIntegrator::step(std::vector<Particle> &particles,
         particle.setVelocity(velocity);
         particle.setPosition(position);
 
-        // Apply Boundary Conditions
         boundaryConditions.apply(particle);
     }
 }
