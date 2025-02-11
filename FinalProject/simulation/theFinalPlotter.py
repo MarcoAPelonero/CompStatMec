@@ -6,14 +6,14 @@ from pathlib import Path
 
 sns.set_theme(style="darkgrid")
 data_dir = Path("mlcomparisons")
-files = sorted(data_dir.glob("mlComparison_rho_*_T_*.dat"))
+files = sorted(data_dir.glob("mlUnFairComparison_rho_*_T_*.dat"))
 if len(files) != 4:
     raise ValueError("Expected exactly 4 simulations in 'mlcomparisons/'")
 
 # Purple shades for both time and energy plots
 cols = sns.color_palette("Purples", 3)
 cols = ["#6A0DAD", "#333333", "#00008B"]
-pat = re.compile(r"mlComparison_rho_(?P<rho>[\d\.e-]+)_T_(?P<T>[\d\.e-]+)\.dat")
+pat = re.compile(r"mlUnFairComparison_rho_(?P<rho>[\d\.e-]+)_T_(?P<T>[\d\.e-]+)\.dat")
 all_data = []
 
 for f in files:
@@ -54,6 +54,8 @@ for i, d in enumerate(all_data):
     ax.set_xlabel("Step")
     ax.set_yscale('log')
     ax.set_ylabel("Time [s]")
+    ax.grid(True, which='both', linestyle='--', linewidth=0.5)
+
 handles, labels = axs_t[0, 0].get_legend_handles_labels()
 fig_t.legend(handles, labels, loc="upper center", ncol=3)
 fig_t.suptitle("Time Evolution (4 Simulations)", y=1.03, fontsize=14)
@@ -71,6 +73,7 @@ for i, d in enumerate(all_data):
     ax.set_title(f"Energy (rho={d['rho']}, T={d['T']})")
     ax.set_xlabel("Step")
     ax.set_ylabel("Energy")
+    ax.grid(True, which='both', linestyle='--', linewidth=0.5)
 handles, labels = axs_e[0, 0].get_legend_handles_labels()
 fig_e.legend(handles, labels, loc="upper center", ncol=3)
 fig_e.suptitle("Energy Evolution (4 Simulations)", y=1.03, fontsize=14)

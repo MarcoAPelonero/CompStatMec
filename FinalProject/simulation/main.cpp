@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
 
     double taup = 1;
     std::cout << "Current Working Directory: " << std::filesystem::current_path() << std::endl;
-    MolecularDynamicsSimulation::IntegrationMethod method = MolecularDynamicsSimulation::IntegrationMethod::RDFSpeedVerlet;
+    MolecularDynamicsSimulation::IntegrationMethod method = MolecularDynamicsSimulation::IntegrationMethod::MLSpeedVerlet;
 
     // Override with command-line arguments if provided
     if (argc > 1) N = std::atoi(argv[1]);
